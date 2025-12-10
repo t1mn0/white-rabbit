@@ -1,37 +1,44 @@
 #pragma once
 
-#include <atomic>
-
 #include "task.hpp"
+#include <atomic>
+#include <cstdint>
+
+#ifdef __cpp_lib_hardware_interference_size
+inline constexpr std::size_t CACHE_LINE_SIZE = std::hardware_destructive_interference_size;
+#else
+inline constexpr std::size_t CACHE_LINE_SIZE = 64;
+#endif
 
 namespace wr {
 
-template<typename TaskType> class TaskPool;
+template <typename TaskType>
+class TaskPool;
 
-using QueueItem = ITask*;
+class LockFreeMpMcQueue {
 
-struct QueueNode {
-  QueueItem data;
-  std::atomic<QueueNode*> next;
+  public:  // member-functions:
+    LockFreeMpMcQueue();
+    ~LockFreeMpMcQueue();
 
-  QueueNode(QueueItem item) : data(item), next(nullptr) {}
+    LockFreeMpMcQueue(const LockFreeMpMcQueue&) = delete;
+    LockFreeMpMcQueue& operator=(const LockFreeMpMcQueue&) = delete;
+
+    void push(ITask* item);
+    ITask* pop();
+    int pop_batch(ITask** output_buffer, int max_count);
+
+
+  private:
+    struct QueueNode {
+        ITask* data_;
+        std::atomic<QueueNode*> next_{nullptr};
+
+        QueueNode(ITask* item);
+    };
+
+    alignas(CACHE_LINE_SIZE) std::atomic<QueueNode*> head_;
+    alignas(CACHE_LINE_SIZE) std::atomic<QueueNode*> tail_;
 };
 
-class UnboundedMPMCQueue {
-private: // fields:
-  std::atomic<QueueNode*> head;
-  std::atomic<QueueNode*> tail;
-
-public: // member-functions:
-  UnboundedMPMCQueue();
-  ~UnboundedMPMCQueue();
-
-  UnboundedMPMCQueue(const UnboundedMPMCQueue&) = delete;
-  UnboundedMPMCQueue& operator=(const UnboundedMPMCQueue&) = delete;
-
-  void push(QueueItem item);
-  QueueItem pop();
-  int pop_batch(QueueItem* output_buffer, int max_count);
-};
-
-} // namespace wr
+}  // namespace wr
