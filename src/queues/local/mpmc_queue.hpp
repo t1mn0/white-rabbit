@@ -1,8 +1,7 @@
 #pragma once
 
-#include "task.hpp"
+#include "../../tasks/task.hpp"
 #include <atomic>
-#include <cstdint>
 
 #ifdef __cpp_lib_hardware_interference_size
 inline constexpr std::size_t CACHE_LINE_SIZE = std::hardware_destructive_interference_size;
@@ -12,6 +11,7 @@ inline constexpr std::size_t CACHE_LINE_SIZE = 64;
 
 namespace wr {
 
+/* forward declaration */
 template <typename TaskType>
 class TaskPool;
 
@@ -28,6 +28,7 @@ class LockFreeMpMcQueue {
     ITask* pop();
     int pop_batch(ITask** output_buffer, int max_count);
 
+    Stealer stealer();
 
   private:
     struct QueueNode {

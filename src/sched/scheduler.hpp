@@ -16,7 +16,7 @@ namespace wr {
 
 class Scheduler {
   private:
-    UnboundedMPMCQueue /*Blocking?*/ global_queue;  // second fallback for workers;
+    LockFreeMpMcQueue /*Blocking?*/ global_queue;  // second fallback for workers;
     // (first is stealings process)
 
     // MemPool pool; // for non-dynamic task allocation

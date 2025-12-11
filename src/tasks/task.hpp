@@ -7,7 +7,6 @@ class IntrusiveListNode {
 
 namespace wr {
 
-// Simplest atomic execution unit:
 struct ITask {
   public:
     virtual void run() = 0;  // run exec unit;
