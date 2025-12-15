@@ -1,34 +1,20 @@
 #pragma once
 
+#include "../queues/global/global_queue.hpp"
+#include "../tasks/task.hpp"
+#include "../tasks/task_container.hpp"
+#include "worker.hpp"
 #include <memory>
 #include <random>
 #include <thread>
 #include <vector>
-
-#include "task.hpp"
-#include "task_container.hpp"
-#include "unbounded_mpmc_queue.hpp"
-#include "worker.hpp"
 
 class Worker;
 
 namespace wr {
 
 class Scheduler {
-  private:
-    LockFreeMpMcQueue /*Blocking?*/ global_queue;  // second fallback for workers;
-    // (first is stealings process)
-
-    // MemPool pool; // for non-dynamic task allocation
-
-    uint32_t worker_count;
-    std::vector<std::unique_ptr<Worker>> workers;
-    std::vector<std::thread> threads;
-
-    std::random_device rd_;
-    std::mt19937 rng_;
-
-  public:  // member-functions:
+  public:
     static const uint32_t DEFAULT_WORKERS;
     static constexpr size_t POOL_CAPACITY = 8192;
 
@@ -36,11 +22,19 @@ class Scheduler {
     Scheduler(const Scheduler&) = delete;             // non copyable;
     Scheduler& operator=(const Scheduler&) = delete;  // non copyassignable;
     Scheduler(Scheduler&&) = delete;                  // non movable;
-    Scheduler& operator=(Scheduler&&) = delete;       // // non moveassignable
+    Scheduler& operator=(Scheduler&&) = delete;       // non moveassignable
     ~Scheduler();
 
-    void submit_task(ITask*);
+    void submit(TaskBase*);
     void submit_task_container(ITaskContainer&&);
+
+  private:
+    uint32_t worker_count_;
+    std::vector<std::unique_ptr<Worker>> workers_;
+    std::vector<std::thread> threads_;
+
+    std::random_device rd_;
+    std::mt19937 rng_;
 };
 
 }  // namespace wr

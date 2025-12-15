@@ -1,5 +1,5 @@
-ADD_LIBRARY(Tests Static)
+# ADD_LIBRARY(Tests Static)
 
-TARGET_SOURCES(Tests
-  # ...
-)
+# TARGET_SOURCES(Tests
+#   # ...
+# )

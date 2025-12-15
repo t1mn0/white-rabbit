@@ -1,10 +1,5 @@
 #pragma once
 
-template <typename T>
-class IntrusiveListNode {
-    // . . .
-};
-
 namespace wr {
 
 struct ITask {
