@@ -17,7 +17,6 @@ struct ITaskContainer {
            // or, if explicitly running this process not needed, point what (always waker?) scheduler should wait;
            // (for example, in task-graph we should run root vertex, rest vertices will be triggered as a chain reaction)
            // std::variant<ITask*, WaitFor(waker)> start_from();
-
     // How to delete full completed task container from Scheduler?
     // 1. Scheduler can control state of task-containers. Hence, it need method `bool is_done()` in TaskContainer
     // for checking is this TaskContainer should be deleted from Scheduler.TaskContainerStorage;
