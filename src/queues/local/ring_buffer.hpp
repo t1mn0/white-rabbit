@@ -69,28 +69,37 @@ class RingBuffer {
 
     RingBuffer() = default;
 
-    /* Non-copiable */
+    /* Non-copiable : slots contains atomics, copying would break inveriants of atomicity */
     RingBuffer(const RingBuffer&) = delete;
     RingBuffer& operator=(const RingBuffer&) = delete;
 
-    /* Non-movable */
+    /* Non-movable : same */
     RingBuffer(RingBuffer&&) = delete;
     RingBuffer& operator=(RingBuffer&&) = delete;
 
     /**
      * @brief Load task ptr from slot.
      * @param index Global index
+     * @return Task pointer stored at that logical position.
      */
-    ValueType load(uint64_t index, std::memory_order = std::memory_order::seq_cst) const;
+    ValueType load(uint64_t index) const noexcept;
 
     /**
      * @brief Store task pointer into slot.
+     * @param index Global index.
+     * @param value Task ptr to store.
      */
-    void store(uint64_t index, ValueType value, std::memory_order = std::memory_order::seq_cst);
+    void store(uint64_t index, ValueType value) noexcept;
+
+    /**
+     * @brief Convert global index to local slot index.
+     * @param global Any positive int
+     * @return Index in range [0, Capacity)
+     */
+    [[nodiscard]]
+    static constexpr size_t to_local_index(uint64_t global) noexcept;
 
   private:
-    static constexpr size_t to_local_index(uint64_t global);
-
     static constexpr size_t kCapacity = Capacity;
     static constexpr size_t kMask = Capacity - 1;
 
@@ -99,5 +108,23 @@ class RingBuffer {
 
 /* ------------------------------------------------------------------- */
 
+template <size_t Capacity>
+    requires IsPowerOfTwo<Capacity>
+inline auto RingBuffer<Capacity>::load(uint64_t index) const noexcept -> RingBuffer<Capacity>::ValueType {
+    return slots_[to_local_index(index)].load();
+}
+
+template <size_t Capacity>
+    requires IsPowerOfTwo<Capacity>
+inline void RingBuffer<Capacity>::store(uint64_t index, ValueType value) noexcept {
+    slots_[to_local_index(index)].store(value);
+}
+
+template <size_t Capacity>
+    requires IsPowerOfTwo<Capacity>
+inline constexpr size_t RingBuffer<Capacity>::to_local_index(uint64_t global) noexcept {
+    /* size_t is has system-dependent size => we have to guarantee bit safety */
+    return static_cast<size_t>(global) & kMask;
+}
 
 };  // namespace wr::queues
