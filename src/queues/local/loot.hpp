@@ -61,6 +61,7 @@ inline Loot::Loot(State s, TaskBase* task) noexcept : state_(s), reward_(task) {
 inline Loot::Loot(State state) noexcept : state_(state), reward_(nullptr) {}
 
 inline auto Loot::success(TaskBase* task) noexcept -> Loot {
+    assert(task != nullptr);
     return Loot(State::Success, task);
 }
 

@@ -2,7 +2,39 @@
 
 #include <cstddef>
 
-constexpr bool is_power_of_two(size_t n) noexcept {
+/**
+ * @section POWER OF TWO REQUIREMENT
+ *
+ *  |> To map global index to local we have to do modulo operation.
+ *
+ *  But if we have a large number of requests, it could be quite sloooooow...
+ *
+ *  But what if there was another operation that was isomorphic to the modulo, but much faster??
+ *  And this operation is a logical AND. But this trick works only if we have capacity = 2^N.
+ *
+ *  |> [If capacity = 2^N => global % capacity = global & (mask)]
+ *
+ *  => The mask := [capacity - 1] cuts off all bits above the capacity
+ *  and leaving only the remainder. That's exactly what modulo does.
+ *
+ * ---------------------------
+ * EXAMPLE :
+ * Capacity = 8 = 2^3 = 0b1000
+ * mask = 8 - 1 = 7 = 0b0111
+ *
+ * => Any number AND with 0b0111 keeps only 3 lower bits:
+ * global = 13 = 0b1101
+ *
+ *   1101
+ * & 0111
+ * ------
+ *   0101 = 5 (13 % 8 also = 5)
+ *
+ * ---------------------------
+ */
+
+constexpr bool
+is_power_of_two(size_t n) noexcept {
     return n > 0 && (n & (n - 1)) == 0;
 }
 
