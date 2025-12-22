@@ -67,6 +67,9 @@ class RingBuffer {
   public:
     using ValueType = TaskBase*;
 
+    static constexpr size_t kCapacity = Capacity;
+    static constexpr size_t kMask = Capacity - 1;
+
     RingBuffer() = default;
 
     /* Non-copiable : slots contains atomics, copying would break inveriants of atomicity */
@@ -100,9 +103,6 @@ class RingBuffer {
     static constexpr size_t to_local_index(uint64_t global) noexcept;
 
   private:
-    static constexpr size_t kCapacity = Capacity;
-    static constexpr size_t kMask = Capacity - 1;
-
     std::array<std::atomic<ValueType>, Capacity> slots_;
 };
 

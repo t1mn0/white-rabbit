@@ -2,12 +2,22 @@
 
 #include <cstddef>
 
+/* ------------------------------------------------------------------- */
+
+#ifdef __cpp_lib_hardware_interference_size
+inline constexpr std::size_t CACHE_LINE_SIZE = std::hardware_destructive_interference_size;
+#else
+inline constexpr std::size_t CACHE_LINE_SIZE = 64;
+#endif
+
+/* ------------------------------------------------------------------- */
+
 /**
  * @section POWER OF TWO REQUIREMENT
  *
  *  |> To map global index to local we have to do modulo operation.
  *
- *  But if we have a large number of requests, it could be quite sloooooow...
+ *  But if we have a large number of requests to our circular buffer, it could be quite sloooooow...
  *
  *  But what if there was another operation that was isomorphic to the modulo, but much faster??
  *  And this operation is a logical AND. But this trick works only if we have capacity = 2^N.
@@ -40,3 +50,5 @@ is_power_of_two(size_t n) noexcept {
 
 template <size_t N>
 concept IsPowerOfTwo = is_power_of_two(N);
+
+/* ------------------------------------------------------------------- */

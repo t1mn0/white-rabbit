@@ -9,7 +9,6 @@ namespace wr::queues {
 template <size_t Capacity>
 class StealHandle {
 
-
   private:
     std::shared_ptr<SharedState<Capacity>> state_;
 };
