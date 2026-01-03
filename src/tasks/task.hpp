@@ -10,7 +10,7 @@ struct ITask {
     virtual ~ITask() = default;
 };
 
-struct TaskBase : ITask, vvv::IntrusiveListNode<TaskBase> {
+struct TaskBase : public ITask, vvv::IntrusiveListNode<TaskBase> {
 };
 
 }  // namespace wr
