@@ -10,7 +10,7 @@
 namespace wr::queues {
 
 template <size_t Capacity>
-    requires PowerOfTwo<Capacity>
+    requires IsPowerOfTwo<Capacity>
 class RingBuffer {
   public:
     using ValueType = TaskBase*;

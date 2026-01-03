@@ -7,9 +7,8 @@
 
 namespace wr::queues {
 
-
 template <size_t Capacity>
-    requires PowerOfTwo<Capacity>
+    requires IsPowerOfTwo<Capacity>
 struct SharedState {
     RingBuffer<Capacity> tasks_;
 

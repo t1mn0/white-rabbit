@@ -2,7 +2,7 @@
 
 #include "../tasks/task.hpp"
 
-namespace wr {
+namespace wr::sched::detail {
 
 struct IScheduler {
   public:  // member-functions:
@@ -14,4 +14,4 @@ struct IScheduler {
     ~IScheduler() = default;
 };  // class IScheduler
 
-}  // namespace wr
+}  // namespace wr::sched::detail

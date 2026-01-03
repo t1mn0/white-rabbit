@@ -26,7 +26,7 @@ std::optional<TaskBase*> GlobalTaskQueue::try_extract_task() {
     return task;
 }
 
-void GlobalTaskQueue::dock_list(vvv::IntrusiveList<TaskBase>&& list) {
+void GlobalTaskQueue::dock_tasks(vvv::IntrusiveList<TaskBase>&& list) {
     if (list.IsEmpty()) {
         return;
     }
@@ -50,7 +50,7 @@ void GlobalTaskQueue::dock_list(vvv::IntrusiveList<TaskBase>&& list) {
     not_empty_.notify_one();
 }
 
-std::optional<vvv::IntrusiveList<TaskBase>> GlobalTaskQueue::undock(size_t count) {
+std::optional<vvv::IntrusiveList<TaskBase>> GlobalTaskQueue::undock_tasks(size_t count) {
     std::lock_guard lock(mutex_);
 
     if (buffer_.IsEmpty() || count == 0) {

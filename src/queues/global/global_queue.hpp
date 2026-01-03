@@ -10,9 +10,9 @@
 
 namespace wr {
 
-// Unbounded
-// Blocking
-// MP-MC
+// 1. Unbounded
+// 2. Blocking
+// 3. MP-MC
 class GlobalTaskQueue {
   private:  // fields:
     std::mutex mutex_;
@@ -35,11 +35,11 @@ class GlobalTaskQueue {
 
     // docking is process of joining a tasks batch to the global_queue,
     // which is wrapped in an IntrusiveList:
-    void dock_list(vvv::IntrusiveList<TaskBase>&& list);
+    void dock_tasks(vvv::IntrusiveList<TaskBase>&& list);
 
     // undocking is reverse operation to the `dock_list` - serve to pick up
     // tasks batch from the global queue, which wrapped in an IntrusiveList:
-    std::optional<vvv::IntrusiveList<TaskBase>> undock(size_t count);
+    std::optional<vvv::IntrusiveList<TaskBase>> undock_tasks(size_t count);
 };
 
 }  // namespace wr
