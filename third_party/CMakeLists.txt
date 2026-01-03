@@ -14,13 +14,12 @@ FetchContent_Declare(
     GIT_TAG master
 )
 
-
 FetchContent_MakeAvailable(
   googletest
   vvv
 )
 
 IF (vvv_POPULATED)
-  ADD_LIBRARY(third_party_vvv INTERFACE)
-  TARGET_INCLUDE_DIRECTORIES(third_party_vvv INTERFACE ${vvv_SOURCE_DIR}/source)
+    ADD_LIBRARY(third_party_vvv INTERFACE)
+    TARGET_INCLUDE_DIRECTORIES(third_party_vvv INTERFACE ${vvv_SOURCE_DIR}/source)
 ENDIF()

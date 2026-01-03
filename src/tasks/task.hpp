@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vvv/list.hpp>
+
 namespace wr {
 
 struct ITask {
@@ -8,7 +10,7 @@ struct ITask {
     virtual ~ITask() = default;
 };
 
-struct TaskBase : ITask, IntrusiveListNode<TaskBase> {
+struct TaskBase : ITask, vvv::IntrusiveListNode<TaskBase> {
 };
 
 }  // namespace wr
