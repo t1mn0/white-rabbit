@@ -59,6 +59,17 @@ class SharedState {
     void store_bottom(uint64_t idx) noexcept;
 
     /*
+     * @brief Load task from buffer by given index.
+     */
+    [[nodiscard]]
+    auto load_task(uint64_t idx) const noexcept -> ValueType;
+
+    /*
+     * @brief Store task into buffer at given index.
+     */
+    void store_task(uint64_t idx, ValueType task) noexcept;
+
+    /*
      * @brief Atomically increment current top if it equals expected value.
      * @param expected Current expected value of top.
      * @return true if CAS succeeded => we claimed the slot, false otherwise.
@@ -75,17 +86,6 @@ class SharedState {
      */
     [[nodiscard]]
     bool try_increment_top_by(uint64_t count, uint64_t expected) noexcept;
-
-    /*
-     * @brief Load task from buffer by given index.
-     */
-    [[nodiscard]]
-    ValueType load_task(uint64_t idx) const noexcept;
-
-    /*
-     * @brief Store task into buffer at given index.
-     */
-    void store_task(uint64_t idx, ValueType task) const noexcept;
 
     /*
      * @brief Apprroximate number of elements.
@@ -118,5 +118,34 @@ class SharedState {
 
 /* ------------------------------------------------------------------- */
 
+template <size_t Capacity>
+    requires IsPowerOfTwo<Capacity>
+inline uint64_t SharedState<Capacity>::load_bottom() const noexcept {
+    return top_.load();
+}
+
+template <size_t Capacity>
+    requires IsPowerOfTwo<Capacity>
+inline uint64_t SharedState<Capacity>::load_top() const noexcept {
+    return top_.load();
+}
+
+template <size_t Capacity>
+    requires IsPowerOfTwo<Capacity>
+inline void SharedState<Capacity>::store_bottom(uint64_t idx) noexcept {
+    bottom_.store(idx);
+}
+
+template <size_t Capacity>
+    requires IsPowerOfTwo<Capacity>
+inline auto SharedState<Capacity>::load_task(uint64_t idx) const noexcept -> SharedState<Capacity>::ValueType {
+    return tasks_.load(idx);
+}
+
+template <size_t Capacity>
+    requires IsPowerOfTwo<Capacity>
+inline void SharedState<Capacity>::store_task(uint64_t idx, SharedState<Capacity>::ValueType task) noexcept {
+    tasks_.store(idx, task);
+}
 
 };  // namespace wr::queues
