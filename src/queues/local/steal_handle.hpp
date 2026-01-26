@@ -6,9 +6,9 @@
 
 namespace wr::queues {
 
-template <size_t Capacity>
+template <task::Task TaskT, size_t Capacity>
 class StealHandle {
   private:
-    std::shared_ptr<SharedState<Capacity>> state_;
+    std::shared_ptr<SharedState<TaskT, Capacity>> state_;
 };
 };  // namespace wr::queues

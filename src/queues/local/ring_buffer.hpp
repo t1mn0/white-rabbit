@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../tasks/task.hpp"
+#include "../../tasks/concept.hpp"
 #include "utils.hpp"
 #include <array>
 #include <atomic>
@@ -9,11 +9,11 @@
 
 namespace wr::queues {
 
-template <size_t Capacity>
+template <task::Task TaskT, size_t Capacity>
     requires IsPowerOfTwo<Capacity>
 class RingBuffer {
   public:
-    using ValueType = TaskBase*;
+    using ValueType = TaskT*;
 
     ValueType load(uint64_t index) const;
 

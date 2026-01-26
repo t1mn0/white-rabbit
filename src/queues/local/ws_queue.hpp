@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../tasks/task.hpp"
+#include "../../tasks/concept.hpp"
 #include "shared_state.hpp"
 #include "steal_handle.hpp"
 #include <memory>
@@ -15,14 +15,14 @@ namespace wr {
 
 // Forward-decl in 'queues' sub-namespace:
 namespace queues {
-template <size_t Capacity>
+template <task::Task TaskT, size_t Capacity>
 class StealHandle;
 }  // namespace queues
 
 /**
  * Work-stealing spmc lock-free local queue
  */
-template <typename T = TaskBase*, size_t Capacity = 8196>
+template <task::Task TaskT, size_t Capacity = 8196>
     requires IsPowerOfTwo<Capacity>
 class WorkStealingQueue {
   public:
@@ -33,16 +33,16 @@ class WorkStealingQueue {
     WorkStealingQueue& operator=(const WorkStealingQueue&) = delete;
 
 
-    bool try_push(TaskBase* item);
+    bool try_push(TaskT* item);
 
-    TaskBase* pop();
+    TaskT* pop();
 
-    int pop_batch(TaskBase** output_buffer, size_t max_count);
+    int pop_batch(TaskT** output_buffer, size_t max_count);
 
-    queues::StealHandle<Capacity> stealer();
+    queues::StealHandle<TaskT, Capacity> stealer();
 
   private:
-    std::shared_ptr<queues::SharedState<Capacity>> shared_state_;
+    std::shared_ptr<queues::SharedState<TaskT, Capacity>> shared_state_;
 };
 
 }  // namespace wr

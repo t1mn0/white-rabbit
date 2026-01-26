@@ -1,12 +1,13 @@
 #pragma once
 
-#include "../tasks/task.hpp"
+#include "../tasks/concept.hpp"
 
 namespace wr::sched::detail {
 
+template <task::Task TaskT>
 struct IScheduler {
   public:  // member-functions:
-    virtual void submit(TaskBase*) = 0;
+    virtual void submit(TaskT*) = 0;
 
   protected:  // member-functions:
     // The `protected` access specifier makes it impossible

@@ -7,10 +7,10 @@
 
 namespace wr::queues {
 
-template <size_t Capacity>
+template <task::Task TaskT, size_t Capacity>
     requires IsPowerOfTwo<Capacity>
 struct SharedState {
-    RingBuffer<Capacity> tasks_;
+    RingBuffer<TaskT, Capacity> tasks_;
 
     std::atomic<uint64_t> top_{0};
     std::atomic<uint64_t> bottom_{0};

@@ -7,6 +7,7 @@
 
 namespace wr {
 
+template <task::Task TaskT>
 class Worker {
   private:  // static fields:
     static constexpr size_t LocalQCapacity = 16;
@@ -24,7 +25,7 @@ class Worker {
     // This relationship also allows two of its participants to "look into" (=use)
     // each other's details. Mnemonically, this semantics is reflected in the usage
     // of ::detail namespace:
-    sched::detail::IScheduler& host_;
+    sched::detail::IScheduler<TaskT>& host_;
     const size_t worker_index_;
 
     // tick_ field adds a bit of fairness: the worker undertakes to take the load off
@@ -32,31 +33,31 @@ class Worker {
     // to do something else;
     uint64_t tick_ = 0;
 
-    TaskBase* warm_slot_ = nullptr; /* LIFO */
+    TaskT* warm_slot_ = nullptr; /* LIFO */
 
-    WorkStealingQueue<TaskBase*, LocalQCapacity> local_queue_;
+    WorkStealingQueue<TaskT*, LocalQCapacity> local_queue_;
 
   public:  // member-functions:
-    Worker(sched::detail::IScheduler& host, size_t worker_index);
+    Worker(sched::detail::IScheduler<TaskT>& host, size_t worker_index);
 
     void start();  // auto-join;
     void wake();   // if parked;
 
     // Worker is producer for its local queue;
-    void push_task(TaskBase* /*, SchedHint */);
+    void push_task(TaskT* /*, SchedHint */);
 
-    std::optional<vvv::IntrusiveList<TaskBase>> yawn_tasks(size_t requested_size);
-    sched::detail::IScheduler& host() const;
+    std::optional<vvv::IntrusiveList<TaskT>> yawn_tasks(size_t requested_size);
+    sched::detail::IScheduler<TaskT>& host() const;
 
   private:  // member-functions:
     void push_to_lifo_slot();
     void push_to_local_queue();
     void offload_to_global_queue();
 
-    std::optional<TaskBase*> try_pick_task();
-    std::optional<TaskBase*> try_pick_task_from_lifo_slot();
-    std::optional<TaskBase*> try_pick_task_from_local_queue();
-    std::optional<TaskBase*> try_pick_task_from_global_queue();
+    std::optional<TaskT*> try_pick_task();
+    std::optional<TaskT*> try_pick_task_from_lifo_slot();
+    std::optional<TaskT*> try_pick_task_from_local_queue();
+    std::optional<TaskT*> try_pick_task_from_global_queue();
 
     // Using the `optional` (monadic) features we can write code like flow:
     // pick_task() = try_pick_task().or_else(/*parking*/);
@@ -64,7 +65,7 @@ class Worker {
     //     .or_else(try_pick_task_from_local_queue())
     //     .or_else(try_pick_task_from_global_queue())
     // etc;
-    TaskBase* pick_task();
+    TaskT* pick_task();
 
     void work();  // run-loop;
 };
