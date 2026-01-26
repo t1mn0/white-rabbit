@@ -52,10 +52,10 @@ void GlobalTaskQueue<TaskT>::dock_tasks(vvv::IntrusiveList<TaskT>&& list) {
 }
 
 template <task::Task TaskT>
-std::optional<vvv::IntrusiveList<TaskT>> GlobalTaskQueue<TaskT>::undock_tasks(size_t count) {
+std::optional<vvv::IntrusiveList<TaskT>> GlobalTaskQueue<TaskT>::try_undock_tasks(size_t max_count) {
     std::lock_guard lock(mutex_);
 
-    if (buffer_.IsEmpty() || count == 0) {
+    if (buffer_.IsEmpty() || max_count == 0) {
         return std::nullopt;
     }
 
@@ -63,7 +63,7 @@ std::optional<vvv::IntrusiveList<TaskT>> GlobalTaskQueue<TaskT>::undock_tasks(si
 
     size_t actual_count = 0;
 
-    while (!buffer_.IsEmpty() && actual_count < count) {
+    while (!buffer_.IsEmpty() && actual_count < max_count) {
         ValueType task = buffer_.PopFrontNonEmpty();  // implicit downcast: IntrusiveListNode* -> TaskT*;
         result.PushBack(task);                        // implicit upcast: TaskT* -> IntrusiveListNode*;
         ++actual_count;

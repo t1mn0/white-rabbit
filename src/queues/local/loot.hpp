@@ -9,25 +9,28 @@ namespace wr::queues {
 
 template <task::Task TaskT>
 class Loot {
-  public:
+  public:  // member-types:
     enum class State : uint8_t {
         Success, /* Stolen task is available */
         Empty,   /* Queue was empty => there is nothing to stole */
         Retry,   /* Contention occurred, worth retrying */
     };
 
-  public:
-    [[nodiscard]] auto static success(TaskT* task) noexcept -> Loot;
+  private:  // fields:
+    State state_{Loot<TaskT>::State::Empty};
+    TaskT* reward_{nullptr};
 
-    [[nodiscard]] auto static empty() noexcept -> Loot;
+  private:  // member-functions:
+    Loot(State, TaskT*) noexcept;
+    explicit Loot(State state) noexcept;
 
-    [[nodiscard]] auto static retry() noexcept -> Loot;
-
+  public:  // member-functions:
+    [[nodiscard]] auto static Success(TaskT* task) noexcept -> Loot;
+    [[nodiscard]] auto static Empty() noexcept -> Loot;
+    [[nodiscard]] auto static Retry() noexcept -> Loot;
 
     bool is_success() const noexcept;
-
     bool is_empty() const noexcept;
-
     bool is_retry() const noexcept;
 
     [[nodiscard]] State get_state() const noexcept;
@@ -37,19 +40,9 @@ class Loot {
 
     /* @brief Safely extracts the task as optional */
     std::optional<TaskT*> as_optional() && noexcept;
-
-
-  private:
-    Loot(State, TaskT*) noexcept;
-    explicit Loot(State state) noexcept;
-
-  private:
-    State state_{Loot<TaskT>::State::Empty};
-    TaskT* reward_{nullptr};
 };
 
 /* ------------------------------------------------------------------- */
-
 
 template <task::Task TaskT>
 inline Loot<TaskT>::Loot(State s, TaskT* task) noexcept : state_(s), reward_(task) {}
@@ -58,17 +51,17 @@ template <task::Task TaskT>
 inline Loot<TaskT>::Loot(State state) noexcept : state_(state), reward_(nullptr) {}
 
 template <task::Task TaskT>
-inline auto Loot<TaskT>::success(TaskT* task) noexcept -> Loot {
+inline auto Loot<TaskT>::Success(TaskT* task) noexcept -> Loot {
     return Loot(State::Success, task);
 }
 
 template <task::Task TaskT>
-inline auto Loot<TaskT>::empty() noexcept -> Loot {
+inline auto Loot<TaskT>::Empty() noexcept -> Loot {
     return Loot(State::Empty);
 }
 
 template <task::Task TaskT>
-inline auto Loot<TaskT>::retry() noexcept -> Loot {
+inline auto Loot<TaskT>::Retry() noexcept -> Loot {
     return Loot(State::Retry);
 }
 

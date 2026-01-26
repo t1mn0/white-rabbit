@@ -40,7 +40,7 @@ class GlobalTaskQueue {
 
     // undocking is reverse operation to the `dock_list` - serve to pick up
     // tasks batch from the global queue, which wrapped in an IntrusiveList:
-    std::optional<vvv::IntrusiveList<TaskT>> undock_tasks(size_t count);
+    std::optional<vvv::IntrusiveList<TaskT>> try_undock_tasks(size_t max_count);
 };
 
 }  // namespace wr
