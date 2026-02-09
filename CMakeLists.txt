@@ -6,6 +6,18 @@ SET(CMAKE_CXX_STANDARD 20)
 SET(CMAKE_CXX_STANDARD_REQUIRED ON)
 SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+OPTION(ENABLE_TSAN "Enable ThreadSanitizer" OFF)
+
+IF(ENABLE_TSAN)
+    IF(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        ADD_COMPILE_OPTIONS("-fsanitize=thread" "-g")
+        ADD_LINK_OPTIONS("-fsanitize=thread")
+        MESSAGE(STATUS "ThreadSanitizer enabled")
+    ELSE()
+        MESSAGE(WARNING "ThreadSanitizer is only supported on GCC/Clang")
+    ENDIF()
+ENDIF()
+
 ADD_SUBDIRECTORY(third_party)
 ENABLE_TESTING()
 

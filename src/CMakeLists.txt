@@ -1,13 +1,13 @@
-file(GLOB_RECURSE CPP_FILES CONFIGURE_DEPENDS "*.cpp")
-file(GLOB_RECURSE HPP_FILES CONFIGURE_DEPENDS "*.hpp" "*.h")
+FILE(GLOB_RECURSE CPP_FILES CONFIGURE_DEPENDS "*.cpp")
+FILE(GLOB_RECURSE HPP_FILES CONFIGURE_DEPENDS "*.hpp" "*.h")
 
-add_library(white_rabbit ${CPP_FILES} ${HPP_FILES})
+ADD_LIBRARY(white_rabbit INTERFACE)
 
-if(TARGET third_party_vvv)
-    target_link_libraries(white_rabbit PRIVATE third_party_vvv)
-endif()
+TARGET_LINK_LIBRARIES(white_rabbit INTERFACE third_party_vvv)
 
-target_include_directories(white_rabbit
-    PRIVATE
+TARGET_INCLUDE_DIRECTORIES(white_rabbit
+    INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
+
+TARGET_SOURCES(white_rabbit INTERFACE ${HPP_FILES})

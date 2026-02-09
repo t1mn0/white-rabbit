@@ -10,7 +10,6 @@
 
 namespace wr::queues {
 
-
 template <task::Task TaskT, size_t Capacity>
     requires utils::check::IsPowerOfTwo<Capacity>
 class RingBuffer {

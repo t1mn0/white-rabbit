@@ -7,6 +7,6 @@ namespace wr::task {
 
 template <typename T>
 concept Task = requires(T task) {
-    { task.Run() } noexcept -> std::same_as<void>; } && std::derived_from<T, vvv::IntrusiveListNode<T>>;
+    { task.run() } noexcept -> std::same_as<void>; } && std::derived_from<T, vvv::IntrusiveListNode<T>>;
 
 }  // namespace wr::task
