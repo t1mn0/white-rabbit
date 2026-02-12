@@ -1,100 +1,98 @@
 #pragma once
 
-#include "../../tasks/task.hpp"
+#include "../../tasks/concept.hpp"
 #include <cassert>
 #include <cstdint>
 #include <optional>
 
 namespace wr::queues {
 
-/**
- * @brief Result of a steal operation.
- *
- * |> Success(TaskBase*) | Empty | Retry
- *
- */
+template <task::Task TaskT>
 class Loot {
-  public:
+  public:  // member-types:
     enum class State : uint8_t {
         Success, /* Stolen task is available */
         Empty,   /* Queue was empty => there is nothing to stole */
         Retry,   /* Contention occurred, worth retrying */
     };
 
-  public:
-    [[nodiscard]] auto static success(TaskBase* task) noexcept -> Loot;
+  private:  // fields:
+    State state_{Loot<TaskT>::State::Empty};
+    TaskT* reward_{nullptr};
 
-    [[nodiscard]] auto static empty() noexcept -> Loot;
+  private:  // member-functions:
+    Loot(State, TaskT*) noexcept;
+    explicit Loot(State state) noexcept;
 
-    [[nodiscard]] auto static retry() noexcept -> Loot;
-
+  public:  // member-functions:
+    [[nodiscard]] auto static Success(TaskT* task) noexcept -> Loot;
+    [[nodiscard]] auto static Empty() noexcept -> Loot;
+    [[nodiscard]] auto static Retry() noexcept -> Loot;
 
     bool is_success() const noexcept;
-
     bool is_empty() const noexcept;
-
     bool is_retry() const noexcept;
 
     [[nodiscard]] State get_state() const noexcept;
 
     /* @brief Consumes the loot [!panics if not Success!] */
-    TaskBase* unwrap() &&;
+    TaskT* unwrap() &&;
 
     /* @brief Safely extracts the task as optional */
-    std::optional<TaskBase*> as_optional() && noexcept;
-
-
-  private:
-    Loot(State, TaskBase*) noexcept;
-    explicit Loot(State state) noexcept;
-
-  private:
-    State state_{Loot::State::Empty};
-    TaskBase* reward_{nullptr};
+    std::optional<TaskT*> as_optional() && noexcept;
 };
 
 /* ------------------------------------------------------------------- */
 
+template <task::Task TaskT>
+inline Loot<TaskT>::Loot(State s, TaskT* task) noexcept : state_(s), reward_(task) {}
 
-inline Loot::Loot(State s, TaskBase* task) noexcept : state_(s), reward_(task) {}
+template <task::Task TaskT>
+inline Loot<TaskT>::Loot(State state) noexcept : state_(state), reward_(nullptr) {}
 
-inline Loot::Loot(State state) noexcept : state_(state), reward_(nullptr) {}
-
-inline auto Loot::success(TaskBase* task) noexcept -> Loot {
-    assert(task != nullptr);
+template <task::Task TaskT>
+inline auto Loot<TaskT>::Success(TaskT* task) noexcept -> Loot {
     return Loot(State::Success, task);
 }
 
-inline auto Loot::empty() noexcept -> Loot {
+template <task::Task TaskT>
+inline auto Loot<TaskT>::Empty() noexcept -> Loot {
     return Loot(State::Empty);
 }
 
-inline auto Loot::retry() noexcept -> Loot {
+template <task::Task TaskT>
+inline auto Loot<TaskT>::Retry() noexcept -> Loot {
     return Loot(State::Retry);
 }
 
-inline bool Loot::is_success() const noexcept {
+template <task::Task TaskT>
+inline bool Loot<TaskT>::is_success() const noexcept {
     return state_ == State::Success;
 }
 
-inline bool Loot::is_empty() const noexcept {
+template <task::Task TaskT>
+inline bool Loot<TaskT>::is_empty() const noexcept {
     return state_ == State::Empty;
 }
 
-inline bool Loot::is_retry() const noexcept {
+template <task::Task TaskT>
+inline bool Loot<TaskT>::is_retry() const noexcept {
     return state_ == State::Retry;
 }
 
-inline auto Loot::get_state() const noexcept -> State {
+template <task::Task TaskT>
+inline auto Loot<TaskT>::get_state() const noexcept -> State {
     return state_;
 }
 
-inline TaskBase* Loot::unwrap() && {
+template <task::Task TaskT>
+inline TaskT* Loot<TaskT>::unwrap() && {
     assert(is_success());
     return std::move(reward_);
 }
 
-inline std::optional<TaskBase*> Loot::as_optional() && noexcept {
+template <task::Task TaskT>
+inline std::optional<TaskT*> Loot<TaskT>::as_optional() && noexcept {
     if (is_success()) {
         return reward_;
     } else {

@@ -1,7 +1,8 @@
 #pragma once
 
-#include "../../tasks/task.hpp"
+#include "../../tasks/concept.hpp"
 #include "utils.hpp"
+
 #include <array>
 #include <atomic>
 #include <cstddef>
@@ -104,27 +105,26 @@ class RingBuffer {
 
   private:
     std::array<std::atomic<ValueType>, Capacity> slots_;
+
+  public:  // member-functions:
+    ValueType load(uint64_t index) const;
+    void store(uint64_t index, ValueType val);
+
+    size_t capacity() const { return Capacity; }
 };
 
 /* ------------------------------------------------------------------- */
 
-template <size_t Capacity>
-    requires IsPowerOfTwo<Capacity>
-inline auto RingBuffer<Capacity>::load(uint64_t index) const noexcept -> RingBuffer<Capacity>::ValueType {
-    return slots_[to_local_index(index)].load();
+template <task::Task TaskT, size_t Capacity>
+    requires utils::check::IsPowerOfTwo<Capacity>
+RingBuffer<TaskT, Capacity>::ValueType RingBuffer<TaskT, Capacity>::load(uint64_t index) const {
+    return slots_[index & mask_].load();
 }
 
-template <size_t Capacity>
-    requires IsPowerOfTwo<Capacity>
-inline void RingBuffer<Capacity>::store(uint64_t index, ValueType value) noexcept {
-    slots_[to_local_index(index)].store(value);
-}
-
-template <size_t Capacity>
-    requires IsPowerOfTwo<Capacity>
-inline constexpr size_t RingBuffer<Capacity>::to_local_index(uint64_t global) noexcept {
-    /* size_t is has system-dependent size => we have to guarantee bit safety */
-    return static_cast<size_t>(global) & kMask;
+template <task::Task TaskT, size_t Capacity>
+    requires utils::check::IsPowerOfTwo<Capacity>
+void RingBuffer<TaskT, Capacity>::store(uint64_t index, ValueType val) {
+    slots_[index & mask_].store(val);
 }
 
 };  // namespace wr::queues
