@@ -18,13 +18,13 @@ namespace wr::queues {
  * ??? Why circular buffer ???
  *
  * For a local deque in ws scheduler we need a data structure that:
- *  |> Has efficient push/pop operations without any memory allocations,
+ *  >> Has efficient push/pop operations without any memory allocations,
  *      in order to achieve lock-free design.
  *
- *  |> Since we want to model/achieve the deque behavior and support work-stealing,
- *      this 'desired' data structure should have LIFO behavior for worker and FIFO behavior for stealers.
+ *  >> Since we want to model/achieve the deque behavior and support work-stealing,
+ *      this 'desired' data structure should have an ability to act with LIFO behavior for worker and with FIFO behavior for stealers.
  *
- *  |> Has quite predictable memory usage.
+ *  >> Has quite predictable memory usage.
  *
  *  => Circular buffer is a perfect variant.
  *  It has O(1) complexity on push/pop operations.
@@ -36,7 +36,7 @@ namespace wr::queues {
  * @section INDEXING
  *  We use two index concepts : [global] and [local].
  *
- *  |> Global index represents logical position in infinite stream :
+ *  >> Global index represents logical position in infinite stream :
  *  ... | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | ...
  *
  *  Top and Bottom are global indeces and NEVER decrease : they grow monotonically from 0 to infty
@@ -45,9 +45,10 @@ namespace wr::queues {
  *
  *  => No ABA problem with indices [they never repeat].
  *
- *  |> Local index represents physical slot in array.
  *
- *  We don't have infinity memory, so we 'fold' our infinite tape into a ring of fixed size.
+ *  >> Local index represents physical slot in array.
+ *
+ *  We don't have infinite memory, so we 'fold' our infinite tape into a ring of fixed size.
  *
  *  | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | ...
  *
@@ -55,18 +56,18 @@ namespace wr::queues {
  *    |---------------|
  *          CAPACITY
  *
- *  @section MAPPING
+ *  @section MAPPING / SLICING
  *
- *  |> That's actually simple : [Local] = [Global] % [Capacity]
- *  But since capacity := 2^N => It resuces to : [Global] & [mask], where mask := [capacity - 1]
+ *  >> That's actually simple : [Local] = [Global] % [Capacity]
+ *  But since capacity := 2^N => It reduces to : [Global] & [mask], where mask := [capacity - 1]
  *
  * @tparam Capacity must be a power of two.
  */
-template <size_t Capacity>
-    requires IsPowerOfTwo<Capacity>
+template <task::Task TaskType, size_t Capacity>
+    requires utils::constants::check::IsPowerOfTwo<Capacity>
 class RingBuffer {
   public:
-    using ValueType = TaskBase*;
+    using ValueType = TaskType*;
 
     static constexpr size_t kCapacity = Capacity;
     static constexpr size_t kMask = Capacity - 1;
@@ -86,7 +87,7 @@ class RingBuffer {
      * @param index Global index
      * @return Task pointer stored at that logical position.
      */
-    ValueType load(uint64_t index) const noexcept;
+    auto load(uint64_t index) const noexcept -> ValueType;
 
     /**
      * @brief Store task pointer into slot.
@@ -103,28 +104,12 @@ class RingBuffer {
     [[nodiscard]]
     static constexpr size_t to_local_index(uint64_t global) noexcept;
 
+    constexpr size_t capacity() const noexcept;
+
   private:
     std::array<std::atomic<ValueType>, Capacity> slots_;
-
-  public:  // member-functions:
-    ValueType load(uint64_t index) const;
-    void store(uint64_t index, ValueType val);
-
-    size_t capacity() const { return Capacity; }
 };
 
-/* ------------------------------------------------------------------- */
-
-template <task::Task TaskT, size_t Capacity>
-    requires utils::check::IsPowerOfTwo<Capacity>
-RingBuffer<TaskT, Capacity>::ValueType RingBuffer<TaskT, Capacity>::load(uint64_t index) const {
-    return slots_[index & mask_].load();
-}
-
-template <task::Task TaskT, size_t Capacity>
-    requires utils::check::IsPowerOfTwo<Capacity>
-void RingBuffer<TaskT, Capacity>::store(uint64_t index, ValueType val) {
-    slots_[index & mask_].store(val);
-}
-
 };  // namespace wr::queues
+
+#include "ring_buffer.tpp"

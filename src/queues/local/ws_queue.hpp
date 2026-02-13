@@ -3,20 +3,17 @@
 #include "../../tasks/concept.hpp"
 #include "shared_state.hpp"
 #include "steal_handle.hpp"
-
+#include "vvv/list.hpp"
 #include <optional>
 
-namespace wr {
+namespace wr::queues {
 
-// 1. Bounded by template param
-// 2. Lock-free
-// 3. SP-MC
-template <task::Task TaskT, size_t Capacity = 8196>
-    requires utils::check::IsPowerOfTwo<Capacity>
+// >> Bounded
+// >> Lock-free
+// >> SP-MC
+template <task::Task TaskType, size_t Capacity = 8196>
+    requires utils::constants::check::IsPowerOfTwo<Capacity>
 class WorkStealingQueue {
-  private:  // fields:
-    queues::SharedState<TaskT, Capacity> shared_state_;
-
   public:  // member-functions:
     WorkStealingQueue();
     ~WorkStealingQueue() = default;
@@ -26,24 +23,43 @@ class WorkStealingQueue {
     WorkStealingQueue& operator=(const WorkStealingQueue&) = delete;  // non-copyassignable
     WorkStealingQueue& operator=(WorkStealingQueue&&) = delete;       // non-moveassignable
 
-    // -------------------- Producer API --------------------
-    bool try_push_task(TaskT* item);                                              // !TODO!
-    TaskT* extract_task();                                                        // !TODO!
-    std::optional<vvv::IntrusiveList<TaskT>> try_undock_tasks(size_t max_count);  // !TODO!
+    /*  -------------------- Producer API -------------------- */
 
-    bool try_push(TaskBase* item);
+    /*
+     * @brief Push task at the bottom, returns False if queue is full.
+     */
+    /* !! TODO !! */ bool try_push(TaskType* item) noexcept;
 
-    TaskBase* pop();
+    /* !! TODO !! */ TaskType* extract_task();
+    /* !! TODO !! */ std::optional<vvv::IntrusiveList<TaskType>> try_undock_tasks(size_t max_count);
 
-    int pop_batch(TaskBase** output_buffer, size_t max_count);
 
-  private:
-    std::shared_ptr<queues::SharedState<Capacity>> shared_state_;
+    /*  -------------------- Consumer API -------------------- */
+    /*
+     * @brief Try pop task from the bottom, returns nullopt if empty.
+     */
+    std::optional<TaskType*> try_pop() noexcept;
 
-    // -------------------- Consumer API --------------------
-    queues::StealHandle<TaskT, Capacity> stealer() {
-        return queues::StealHandle<TaskT, Capacity>(&shared_state_);
-    }
+    template <typename Container>
+    int pop_batch(Container& where, size_t max_count);
+
+    /*
+     * @brief Offload half of the local queue to the global one if the local queue turns out to be full
+     * when attempting a push operation.
+     *
+     * @return List of offloaded tasks.
+     */
+    vvv::IntrusiveList<TaskType> offload_half() noexcept;
+
+    [[nodiscard]]
+    /* !! TODO !! */ StealHandle<TaskType, Capacity> create_stealer() noexcept;
+
+  private:  // fields:
+    SharedState<TaskType, Capacity> state_;
+
+    friend class StealHandle<TaskType, Capacity>;
 };
 
-}  // namespace wr
+}  // namespace wr::queues
+
+#include "ws_queue.tpp"

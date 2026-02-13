@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ring_buffer.hpp"
+#include "tasks/concept.hpp"
 #include "utils.hpp"
 
 #include <cstddef>
@@ -20,17 +21,17 @@ namespace wr::queues {
  *
  * @section INVARIANTS
  *
- * |> top <= bottom
- * |> bottom - top <= capacity
- * |> empty when top == bottom
+ * >> (top <= bottom)
+ * >> (bottom - top <= capacity)
+ * >> (empty when top == bottom)
  *
  */
 
-template <size_t Capacity>
-    requires IsPowerOfTwo<Capacity>
+template <task::Task TaskType, size_t Capacity>
+    requires utils::constants::check::IsPowerOfTwo<Capacity>
 class SharedState {
   public:
-    using ValueType = RingBuffer<Capacity>::ValueType;
+    using ValueType = typename RingBuffer<TaskType, Capacity>::ValueType;
 
     SharedState() = default;
 
@@ -86,67 +87,18 @@ class SharedState {
      * [Used for batch stealing].
      */
     [[nodiscard]]
-    bool try_increment_top_by(uint64_t count, uint64_t expected) noexcept;
+    bool try_increment_top_by(uint64_t expected, uint64_t count) noexcept;
 
-    /*
-     * @brief Apprroximate number of elements.
-     */
-    [[nodiscard]]
-    size_t approx_size() const noexcept;
-
-    /*
-     * @brief Check if appears empty.
-     */
-    [[nodiscard]]
-    bool is_empty_approx() const noexcept;
-
-    /*
-     * @brief Check if appears full.
-     */
-    [[nodiscard]]
-    bool is_full_approx() const noexcept;
 
   private:
     /* Storage for task pointers. */
-    alignas(CACHE_LINE_SIZE) RingBuffer<Capacity> tasks_;
+    alignas(utils::constants::CACHE_LINE_SIZE) RingBuffer<TaskType, Capacity> tasks_;
 
-    /* First valid element index [global]. Modified by thieves. */
-    alignas(CACHE_LINE_SIZE) std::atomic<uint64_t> top_{0};
+    /* First valid element index [global]. Modify by stealers. */
+    alignas(utils::constants::CACHE_LINE_SIZE) std::atomic<uint64_t> top_{0};
 
-    /* Next free slot index [global]. Modified by owner only. */
-    alignas(CACHE_LINE_SIZE) std::atomic<uint64_t> bottom_{0};
+    /* Next free slot index [global]. Modify by owner only. */
+    alignas(utils::constants::CACHE_LINE_SIZE) std::atomic<uint64_t> bottom_{0};
 };
-
-/* ------------------------------------------------------------------- */
-
-template <size_t Capacity>
-    requires IsPowerOfTwo<Capacity>
-inline uint64_t SharedState<Capacity>::load_bottom() const noexcept {
-    return top_.load();
-}
-
-template <size_t Capacity>
-    requires IsPowerOfTwo<Capacity>
-inline uint64_t SharedState<Capacity>::load_top() const noexcept {
-    return top_.load();
-}
-
-template <size_t Capacity>
-    requires IsPowerOfTwo<Capacity>
-inline void SharedState<Capacity>::store_bottom(uint64_t idx) noexcept {
-    bottom_.store(idx);
-}
-
-template <size_t Capacity>
-    requires IsPowerOfTwo<Capacity>
-inline auto SharedState<Capacity>::load_task(uint64_t idx) const noexcept -> SharedState<Capacity>::ValueType {
-    return tasks_.load(idx);
-}
-
-template <size_t Capacity>
-    requires IsPowerOfTwo<Capacity>
-inline void SharedState<Capacity>::store_task(uint64_t idx, SharedState<Capacity>::ValueType task) noexcept {
-    tasks_.store(idx, task);
-}
 
 };  // namespace wr::queues
