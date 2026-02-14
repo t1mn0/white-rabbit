@@ -4,6 +4,7 @@
 #include "shared_state.hpp"
 #include "steal_handle.hpp"
 #include "utils.hpp"
+#include <atomic>
 #include <cstddef>
 #include <optional>
 #include <vvv/list.hpp>
@@ -74,12 +75,15 @@ bool WorkStealingQueue<TaskType, Capacity>::try_push(TaskType* task) noexcept {
     auto bt = state_.load_bottom(std::memory_order::relaxed);
 
     auto top = state_.load_top();
+
+    /* capacity cheeeck.. */
     if (bt - top >= Capacity) {
         return false;
     }
     state_.store_task(bt, task);
 
     /* maybe fence right here..? */
+    std::atomic_thread_fence(std::memory_order::seq_cst /* ??? */);
 
     state_.store_bottom(++bt);
 
@@ -89,8 +93,49 @@ bool WorkStealingQueue<TaskType, Capacity>::try_push(TaskType* task) noexcept {
 template <task::Task TaskType, size_t Capacity>
     requires utils::constants::check::IsPowerOfTwo<Capacity>
 auto WorkStealingQueue<TaskType, Capacity>::try_pop() noexcept -> std::optional<TaskType*> {
-    auto top = state
-}
 
+    /* relaxedd mo here for the same reason [worker is the only one that has access tthe bottom]  */
+    auto bt = state_.load_bottom(std::memory_order::relaxed) - 1;
+
+    state_.store_bottom(bt);
+
+    /* TODO : [to clarify and proof these guarantees in terms of partial orders]
+     * TODO : [test with Twist simulations this case]
+     */
+    std::atomic_thread_fence(std::memory_order::seq_cst);
+
+    auto top = state_.load_top();
+
+    /* queue is empty... */
+    if (top >= bt) {
+        /* cancellation... */
+        state_.store_bottom(++bt);
+        return std::nullopt;
+    }
+
+    /* => top <= bottom */
+    auto task = state_.load_task(bt);
+
+    /* TODO : [refactoring : separate race() function ] */
+    if (top < bt) {
+        return task;
+    }
+
+    /* => otherwise, top == bottom
+     * => race with stealers for the last element
+     */
+    if (state_.try_increment_top(top)) {
+
+        /* we won the race */
+        state_.store_bottom(++bt);
+        return task;
+
+    } else {
+
+        /* stealer won... */
+        state_.store_bottom(++bt);
+        return std::nullopt;
+    }
+}
 
 }  // namespace wr::queues
