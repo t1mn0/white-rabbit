@@ -4,7 +4,6 @@
 #include "ring_buffer.hpp"
 #include "tasks/concept.hpp"
 #include "utils.hpp"
-
 #include <cstddef>
 #include <cstdint>
 

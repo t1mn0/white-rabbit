@@ -1,11 +1,11 @@
 #pragma once
 
+#include "../exec/executor.hpp"
+#include "../queues/local/ws_queue.hpp"
 #include <cstddef>
 #include <optional>
 #include <vector>
-
-#include "../exec/executor.hpp"
-#include "../queues/local/ws_queue.hpp"
+#include <vvv/list.hpp>
 
 namespace wr {
 
@@ -69,7 +69,7 @@ class Worker {
     const size_t worker_index_;
 
     // tick_ field adds a bit of fairness: the worker undertakes to load a task from
-    // a global queue on every constantly certain (61) iteration in order to improve
+    // a global queue on every constantly certain (61 by default) iteration in order to improve
     // global progress guarantees and
     //
     // why 61?? Dmitrii Viukov (who designed and implemented the Golang scheduler) said:

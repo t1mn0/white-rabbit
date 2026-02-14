@@ -2,7 +2,6 @@
 
 #include "../../tasks/concept.hpp"
 #include "utils.hpp"
-
 #include <array>
 #include <atomic>
 #include <cstddef>
