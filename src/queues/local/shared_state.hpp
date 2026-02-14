@@ -1,5 +1,6 @@
 #pragma once
 
+#include "exec/config.hpp"
 #include "ring_buffer.hpp"
 #include "tasks/concept.hpp"
 #include "utils.hpp"

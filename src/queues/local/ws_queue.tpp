@@ -1,5 +1,8 @@
+#include "../tasks/concept.hpp"
+#include "utils.hpp"
 #include "ws_queue.hpp"
 #include <atomic>
+#include <optional>
 
 namespace wr::queues {
 
@@ -17,14 +20,20 @@ bool WorkStealingQueue<TaskType, Capacity>::try_push(TaskType* task) noexcept {
     if (bt - top >= Capacity) {
         return false;
     }
-
     state_.store_task(bt, task);
-    
+
     /* maybe fence right here..? */
-    
+
     state_.store_bottom(++bt);
 
     return true;
+}
+
+template <task::Task TaskType, size_t Capacity>
+    requires utils::constants::check::IsPowerOfTwo<Capacity>
+auto WorkStealingQueue<TaskType, Capacity>::try_pop() noexcept -> std::optional<TaskType*> {
+  
+  
 }
 
 

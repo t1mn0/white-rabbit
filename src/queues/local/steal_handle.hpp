@@ -1,5 +1,6 @@
 #pragma once
 
+#include "exec/config.hpp"
 #include "loot.hpp"
 #include "queues/local/utils.hpp"
 #include "shared_state.hpp"
@@ -7,7 +8,6 @@
 namespace wr::queues {
 
 template <task::Task TaskType, size_t Capacity>
-    requires utils::constants::check::IsPowerOfTwo<Capacity>
 class WorkStealingQueue; /* forward-declaration */
 
 /**
@@ -19,13 +19,12 @@ class WorkStealingQueue; /* forward-declaration */
  */
 
 template <task::Task TaskType, size_t Capacity>
-    requires utils::constants::check::IsPowerOfTwo<Capacity>
 class StealHandle {
   public:  // member-functions:
     explicit StealHandle(SharedState<TaskType, Capacity>* state) : state_(state) {}
 
     [[nodiscard]]
-    /* !! TODO !! */ queues::Loot<TaskType> steal() noexcept;
+    /* !! TODO !! */ Loot<TaskType> steal() noexcept;
 
     [[nodiscard]]
     /* !! TODO !! */ Loot<TaskType> steal_batch_and_pop(WorkStealingQueue<TaskType, Capacity>& dest) noexcept;
@@ -39,6 +38,7 @@ class StealHandle {
     StealHandle& operator=(StealHandle&&) = default;
 
   private:  // fields:
+    /* We're holding ptr tthe other worker's shared state. It's like ticket or pass for the stealing */
     SharedState<TaskType, Capacity>* state_;
 
     friend class WorkStealingQueue<TaskType, Capacity>;

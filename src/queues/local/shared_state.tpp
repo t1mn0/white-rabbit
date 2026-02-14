@@ -2,6 +2,7 @@
 
 namespace wr::queues {
 
+
 template <task::Task TaskType, size_t Capacity>
     requires utils::constants::check::IsPowerOfTwo<Capacity>
 uint64_t SharedState<TaskType, Capacity>::load_bottom() const noexcept {

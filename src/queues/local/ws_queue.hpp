@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../tasks/concept.hpp"
+#include "queues/local/utils.hpp"
 #include "shared_state.hpp"
 #include "steal_handle.hpp"
 #include "vvv/list.hpp"
@@ -11,7 +12,7 @@ namespace wr::queues {
 // >> Bounded
 // >> Lock-free
 // >> SP-MC
-template <task::Task TaskType, size_t Capacity = 8196>
+template <task::Task TaskType, size_t Capacity>
     requires utils::constants::check::IsPowerOfTwo<Capacity>
 class WorkStealingQueue {
   public:  // member-functions:
@@ -30,7 +31,6 @@ class WorkStealingQueue {
      */
     /* !! TODO !! */ bool try_push(TaskType* item) noexcept;
 
-    /* !! TODO !! */ TaskType* extract_task();
     /* !! TODO !! */ std::optional<vvv::IntrusiveList<TaskType>> try_undock_tasks(size_t max_count);
 
 

@@ -107,7 +107,7 @@ class RingBuffer {
     constexpr size_t capacity() const noexcept;
 
   private:
-    std::array<std::atomic<ValueType>, Capacity> slots_;
+    std::array<std::atomic<ValueType>, Capacity> slots_{};
 };
 
 };  // namespace wr::queues

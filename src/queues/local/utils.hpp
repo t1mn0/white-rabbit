@@ -61,4 +61,6 @@ concept IsPowerOfTwo = is_power_of_two(N);
 
 }  // namespace check
 
+}  // namespace constants
+
 }  // namespace wr::utils

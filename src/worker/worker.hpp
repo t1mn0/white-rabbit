@@ -1,16 +1,31 @@
 #pragma once
 
+#include <cstddef>
 #include <optional>
+#include <vector>
 
 #include "../exec/executor.hpp"
 #include "../queues/local/ws_queue.hpp"
 
 namespace wr {
 
-template <task::Task TaskType>
+/* forward-declaration */
+template <task::Task TaskType, config::ExecutionConfig Config>
+class WsExecutor;
+
+template <task::Task TaskType, config::ExecutionConfig Config = config::DefaultConfig>
 class Worker {
+  public:  // aliases
+    static constexpr size_t kCapacity = Config::kLocalQueueCapacity;
+    static constexpr size_t kMaxLifoStreak = Config::kMaxLifoStreak;
+    static constexpr size_t kFairnessPeriod = Config::kFairnessPeriod;
+
+    using LocalQueue = queues::WorkStealingQueue<TaskType, kCapacity>;
+    using Handle = queues::StealHandle<TaskType, kCapacity>;
+    using LootType = queues::Loot<TaskType>;
+
   public:  // member-functions:
-    Worker(WsExecutor<TaskType>& host, size_t worker_index);
+    Worker(WsExecutor<TaskType, Config>& host, size_t worker_index);
 
     void start();  // auto-join;
     void wake();   // if parked;
@@ -19,7 +34,7 @@ class Worker {
     void push_task(TaskType* /*, SchedHint */);
 
     std::optional<vvv::IntrusiveList<TaskType>> yawn_tasks(size_t requested_size);
-    WsExecutor<TaskType>& host() const;
+    WsExecutor<TaskType, Config>& host() const;
 
   private:  // member-functions:
     void push_to_lifo_slot();
@@ -41,10 +56,6 @@ class Worker {
 
     void work();  // run-loop;
 
-  private:  // static fields:
-            // scheduling tick = counter, which increment every .push() call;
-    static constexpr size_t GlobalQPollingInterval = 61;
-
   private:  // fields:
     // We introduce a ownership relationship: the executor owns the Worker objects,
     // the Worker belongs to the executor object.
@@ -54,7 +65,7 @@ class Worker {
     // owner (Worker) and at the same time ideally execute its single responsibility;
     // This relationship also allows two of its participants to "look into" (=use)
     // each other's details.
-    WsExecutor<TaskType>& host_;
+    WsExecutor<TaskType, Config>& host_;
     const size_t worker_index_;
 
     // tick_ field adds a bit of fairness: the worker undertakes to load a task from
@@ -70,8 +81,11 @@ class Worker {
     uint64_t tick_ = 0;
 
     std::atomic<TaskType*> warm_slot_{nullptr}; /* LIFO */
+    size_t lifo_streak_{0};
 
-    queues::WorkStealingQueue<TaskType*, LocalQCapacity> local_queue_;
+    queues::WorkStealingQueue<TaskType*, kCapacity> local_queue_;
+
+    std::vector<Handle> steal_tickets_;
 };
 
 };  // namespace wr
