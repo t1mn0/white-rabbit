@@ -1,11 +1,12 @@
 #pragma once
 
 #include "../../tasks/concept.hpp"
-#include "queues/local/utils.hpp"
 #include "shared_state.hpp"
 #include "steal_handle.hpp"
-#include "vvv/list.hpp"
+#include "utils.hpp"
+#include <cstddef>
 #include <optional>
+#include <vvv/list.hpp>
 
 namespace wr::queues {
 
@@ -29,7 +30,7 @@ class WorkStealingQueue {
     /*
      * @brief Push task at the bottom, returns False if queue is full.
      */
-    /* !! TODO !! */ bool try_push(TaskType* item) noexcept;
+    bool try_push(TaskType* item) noexcept;
 
     /* !! TODO !! */ std::optional<vvv::IntrusiveList<TaskType>> try_undock_tasks(size_t max_count);
 
@@ -60,6 +61,36 @@ class WorkStealingQueue {
     friend class StealHandle<TaskType, Capacity>;
 };
 
-}  // namespace wr::queues
+/* ---------------------------------- IMPLEMENTATION ---------------------------------- */
 
-#include "ws_queue.tpp"
+template <task::Task TaskType, size_t Capacity>
+    requires utils::constants::check::IsPowerOfTwo<Capacity>
+bool WorkStealingQueue<TaskType, Capacity>::try_push(TaskType* task) noexcept {
+    /*
+     * since stealers are never touch the bottom of the buffer
+     * => only worker (producer) works with it on a separate cache-line
+     * => relaxed mo
+     */
+    auto bt = state_.load_bottom(std::memory_order::relaxed);
+
+    auto top = state_.load_top();
+    if (bt - top >= Capacity) {
+        return false;
+    }
+    state_.store_task(bt, task);
+
+    /* maybe fence right here..? */
+
+    state_.store_bottom(++bt);
+
+    return true;
+}
+
+template <task::Task TaskType, size_t Capacity>
+    requires utils::constants::check::IsPowerOfTwo<Capacity>
+auto WorkStealingQueue<TaskType, Capacity>::try_pop() noexcept -> std::optional<TaskType*> {
+    auto top = state
+}
+
+
+}  // namespace wr::queues

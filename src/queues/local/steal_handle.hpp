@@ -44,6 +44,10 @@ class StealHandle {
     friend class WorkStealingQueue<TaskType, Capacity>;
 };
 
-};  // namespace wr::queues
+/* ---------------------------------- IMPLEMENTATION ---------------------------------- */
 
-#include "steal_handle.tpp"
+/*
+ * ...
+ */
+
+};  // namespace wr::queues
