@@ -33,25 +33,20 @@ class WorkStealingQueue {
      */
     bool try_push(TaskType* item) noexcept;
 
-    /* !! TODO !! */ std::optional<vvv::IntrusiveList<TaskType>> try_undock_tasks(size_t max_count);
-
-
     /*  -------------------- Consumer API -------------------- */
     /*
      * @brief Try pop task from the bottom, returns nullopt if empty.
      */
     std::optional<TaskType*> try_pop() noexcept;
 
-    template <typename Container>
-    int pop_batch(Container& where, size_t max_count);
 
     /*
-     * @brief Offload half of the local queue to the global one if the local queue turns out to be full
+     * @brief Offload half of all tasks from the local queue to the global one if the local queue turns out to be full
      * when attempting a push operation.
      *
      * @return List of offloaded tasks.
      */
-    vvv::IntrusiveList<TaskType> offload_half() noexcept;
+    std::optional<vvv::IntrusiveList<TaskType>> offload_half() noexcept;
 
     [[nodiscard]]
     /* !! TODO !! */ StealHandle<TaskType, Capacity> create_stealer() noexcept;
@@ -136,6 +131,42 @@ auto WorkStealingQueue<TaskType, Capacity>::try_pop() noexcept -> std::optional<
         state_.store_bottom(++bt);
         return std::nullopt;
     }
+}
+
+template <task::Task TaskType, size_t Capacity>
+    requires utils::constants::check::IsPowerOfTwo<Capacity>
+auto WorkStealingQueue<TaskType, Capacity>::create_stealer() noexcept -> StealHandle<TaskType, Capacity> {
+    return StealHandle<TaskType, Capacity>(state_);
+}
+
+template <task::Task TaskType, size_t Capacity>
+    requires utils::constants::check::IsPowerOfTwo<Capacity>
+auto WorkStealingQueue<TaskType, Capacity>::offload_half() noexcept -> std::optional<vvv::IntrusiveList<TaskType>> {
+
+    vvv::IntrusiveList<TaskType> batch;
+
+    auto bt = state_.load_bottom();
+    auto top = state_.load_top();
+
+    auto size = bt - top;
+
+    if (size <= 1) {
+        return std::nullopt;
+    }
+
+    size_t offload_count = size / 2;
+
+    if (!state_.try_increment_top_by(top, offload_count)) {
+        return std::nullopt;
+    }
+
+    /* [top; top + count) */
+    for (auto i = top; i < top + offload_count; ++i) {
+        auto task = state_.load_task(i);
+        batch.PushBack(task);
+    }
+
+    return batch;
 }
 
 }  // namespace wr::queues
