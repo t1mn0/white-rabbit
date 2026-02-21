@@ -10,19 +10,21 @@
 
 namespace wr::queues {
 
-// 1. Unbounded
-// 2. Blocking
-// 3. MP-MC
+// >> Unbounded
+// >> Blocking
+// >> MP-MC
 template <task::Task TaskT>
 class GlobalQueue {
   public:  // member-types:
     using TaskPtr = TaskT*;
     using Batch = vvv::IntrusiveList<TaskT>;
 
-  private:                      // fields:
-    mutable std::mutex mutex_;  // `mutable`
-    std::condition_variable not_empty_;
+  private:  // fields:
     vvv::IntrusiveList<TaskT> buffer_;
+
+    // Point of contention:
+    mutable std::mutex mutex_;  // `mutable` since it is used in the constant method `.is_empty()`
+    std::condition_variable not_empty_;
 
   public:  // member-functions:
     GlobalQueue() = default;
@@ -47,14 +49,15 @@ class GlobalQueue {
     std::optional<TaskPtr> try_pop() noexcept;
 
     // Tries to extract a batch of tasks up to max_count.
+    // O(max_count) complexity
     std::optional<Batch> try_pop_batch(size_t max_count) noexcept;
 
   private:  // member-functions:
-    // `.empty()` needed not for the internal logic of shifting tasks, but for
+    // `.is_empty()` needed not for the internal logic of shifting tasks, but for
     // external monitoring of the system status and for the logic of scheduler's shutdown:
     bool is_empty() const noexcept;
 
-  private:  // friends declaration:
+  private:  // TODO: friends declaration for .is_empty() users:
             // . . .
 };
 
