@@ -2,8 +2,6 @@
 
 #include "../../../src/queues/global/global_queue.hpp"
 
-using namespace wr;
-
 // -------------------- Test prerequisites --------------------
 
 struct TestTask : vvv::IntrusiveListNode<TestTask> {
@@ -16,7 +14,7 @@ struct TestTask : vvv::IntrusiveListNode<TestTask> {
 
 class GlobalQueueTest : public ::testing::Test {
   protected:
-    GlobalQueue<TestTask> queue;
+    wr::queues::GlobalQueue<TestTask> queue;
 };
 
 // -------------------- Tests --------------------
