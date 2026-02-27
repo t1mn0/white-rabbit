@@ -128,8 +128,10 @@ auto GlobalQueue<TaskT>::try_pop_batch(size_t max_count) noexcept
 
 template <task::Task TaskT>
 bool GlobalQueue<TaskT>::is_empty() const noexcept {
+    ///
     std::lock_guard lock(mutex_);
     return buffer_.IsEmpty();
+    ///
 }
 
 
