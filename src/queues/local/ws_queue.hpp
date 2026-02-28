@@ -136,7 +136,9 @@ auto WorkStealingQueue<TaskType, Capacity>::try_pop() noexcept -> std::optional<
 template <task::Task TaskType, size_t Capacity>
     requires utils::constants::check::IsPowerOfTwo<Capacity>
 auto WorkStealingQueue<TaskType, Capacity>::create_stealer() noexcept -> StealHandle<TaskType, Capacity> {
+    ///
     return StealHandle<TaskType, Capacity>(state_);
+    ///
 }
 
 template <task::Task TaskType, size_t Capacity>

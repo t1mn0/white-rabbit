@@ -55,37 +55,51 @@ Loot<TaskType>::Loot(State state) noexcept : state_(state), reward_(nullptr) {}
 
 template <task::Task TaskType>
 auto Loot<TaskType>::Success(TaskType* task) noexcept -> Loot {
+    ///
     return Loot(State::Success, task);
+    ///
 }
 
 template <task::Task TaskType>
 auto Loot<TaskType>::Empty() noexcept -> Loot {
+    ///
     return Loot(State::Empty);
+    ///
 }
 
 template <task::Task TaskType>
 auto Loot<TaskType>::Retry() noexcept -> Loot {
+    ///
     return Loot(State::Retry);
+    ///
 }
 
 template <task::Task TaskType>
 bool Loot<TaskType>::is_success() const noexcept {
+    ///
     return state_ == State::Success;
+    ///
 }
 
 template <task::Task TaskType>
 bool Loot<TaskType>::is_empty() const noexcept {
+    ///
     return state_ == State::Empty;
+    ///
 }
 
 template <task::Task TaskType>
 bool Loot<TaskType>::is_retry() const noexcept {
+    ///
     return state_ == State::Retry;
+    ///
 }
 
 template <task::Task TaskType>
 auto Loot<TaskType>::get_state() const noexcept -> State {
+    ///
     return state_;
+    ///
 }
 
 template <task::Task TaskType>
