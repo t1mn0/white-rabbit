@@ -1,1 +1,6 @@
 ADD_SUBDIRECTORY(queues/global)
+ADD_SUBDIRECTORY(queues/local)
+# ADD_SUBDIRECTORY(...)
+
+
+ENABLE_TESTING()

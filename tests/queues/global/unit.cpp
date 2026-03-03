@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "../../../src/queues/global/global_queue.hpp"
+#include "queues/global/global_queue.hpp"
 
 // -------------------- Test prerequisites --------------------
 
