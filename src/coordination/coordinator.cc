@@ -8,11 +8,12 @@ namespace wr::coord {
 Coordinator::Coordinator(size_t total_workers)
     : semaphore_(total_workers > 1 ? total_workers / 2 : 1) {}
 
-CoordDirective Coordinator::try_steal() noexcept {
+auto Coordinator::try_steal() noexcept -> CoordDirective {
     if (shutdown_requested_.load()) {
         return CoordDirective::Terminate();
     }
 
+    /* permission to steal */
     auto permittion = semaphore_.try_acquire_permit();
 
     if (permittion.has_value()) {
@@ -28,9 +29,11 @@ CoordDirective Coordinator::try_steal() noexcept {
 }
 
 void Coordinator::park_worker() noexcept {
-    ///
-    semaphore_.park([this] { return shutdown_requested_.load(); });
-    ///
+    semaphore_.park([this] {
+        ///
+        return shutdown_requested_.load();
+        ///
+    });
 }
 
 void Coordinator::notify_worker() noexcept {

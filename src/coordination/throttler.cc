@@ -71,15 +71,21 @@ void Throttler::notify_all_workers() noexcept {
 }
 
 size_t Throttler::searchers_count() const noexcept {
+    ///
     return searchers_count_.load();
+    ///
 }
 
 size_t Throttler::parked_count() const noexcept {
+    ///
     return parked_count_.load();
+    ///
 }
 
 void Throttler::on_permit_released() noexcept {
+    ///
     searchers_count_.fetch_sub(1);  // just guarantee to no leaks in the semaphore
+    ///
 }
 
 }  // namespace wr::coord
