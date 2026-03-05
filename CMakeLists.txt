@@ -56,3 +56,7 @@ IF(WR_BUILD_TESTS)
   enable_testing()
   ADD_SUBDIRECTORY(tests)
 ENDIF()
+
+IF(WR_BUILD_ANALYSIS)
+  ADD_SUBDIRECTORY(analysis)
+ENDIF()
