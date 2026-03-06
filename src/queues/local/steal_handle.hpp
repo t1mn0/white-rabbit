@@ -1,9 +1,7 @@
 #pragma once
 
-#include "exec/config.hpp"
 #include "fwd.hpp"
 #include "loot.hpp"
-#include "queues/local/utils.hpp"
 #include "shared_state.hpp"
 
 namespace wr::queues {

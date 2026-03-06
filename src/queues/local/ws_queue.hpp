@@ -3,7 +3,7 @@
 #include "../../tasks/concept.hpp"
 #include "shared_state.hpp"
 #include "steal_handle.hpp"
-#include "utils.hpp"
+#include "utils/constants.hpp"
 #include <atomic>
 #include <cstddef>
 #include <optional>

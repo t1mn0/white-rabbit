@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../../tasks/concept.hpp"
-#include "utils.hpp"
+#include "utils/constants.hpp"
 
 namespace wr::queues {
 

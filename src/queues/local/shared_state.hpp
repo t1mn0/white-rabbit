@@ -1,9 +1,9 @@
 #pragma once
 
-#include "exec/config.hpp"
+#include "exec/config/config.hpp"
 #include "ring_buffer.hpp"
 #include "tasks/concept.hpp"
-#include "utils.hpp"
+#include "utils/constants.hpp"
 #include <cstddef>
 #include <cstdint>
 

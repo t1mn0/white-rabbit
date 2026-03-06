@@ -8,7 +8,7 @@ PROJECT(white_rabbit
 
 OPTION(WR_BUILD_TESTS "Build unit tests" ON)
 OPTION(WR_BUILD_EXAMPLES "Build examples" ON)
-OPTION(WR_BUILD_BENCHMARKS "Build benchmarks" ON)
+OPTION(WR_BUILD_ANALYSIS "Build benchmarks" OFF)
 OPTION(WR_ENABLE_ASAN "Enable Address Sanitizer" OFF)
 OPTION(WR_ENABLE_TSAN "Enable Thread Sanitizer" OFF)
 
@@ -52,11 +52,13 @@ ADD_SUBDIRECTORY(src)
 
 # *---*---*---*---*---*---*
 
-IF(WR_BUILD_TESTS)
-  enable_testing()
-  ADD_SUBDIRECTORY(tests)
-ENDIF()
+IF(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+  IF(WR_BUILD_TESTS)
+    enable_testing()
+    ADD_SUBDIRECTORY(tests)
+  ENDIF()
 
-IF(WR_BUILD_ANALYSIS)
-  ADD_SUBDIRECTORY(analysis)
+  IF(WR_BUILD_ANALYSIS)
+    ADD_SUBDIRECTORY(analysis)
+  ENDIF()
 ENDIF()
