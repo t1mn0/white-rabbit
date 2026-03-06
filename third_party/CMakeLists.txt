@@ -28,8 +28,7 @@ IF(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     GIT_TAG main
   )
 
-  SET(TWIST_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-  SET(TWIST_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+  SET(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
   # Twist framework
   FetchContent_Declare(
@@ -38,7 +37,12 @@ IF(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     GIT_TAG master
   )
 
-  SET(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+  # Twist features
+  SET(TWIST_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+  SET(TWIST_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+  SET(TWIST_FAULTY ON CACHE BOOL "Enable Twist fault injection..." FORCE)
+  # SET(TWIST_SIM ON CACHE BOOL "Enable Twist determ. simulation..." FORCE)
+
 
   FetchContent_MakeAvailable(
     googletest

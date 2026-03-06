@@ -20,6 +20,10 @@ SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # *---*---*---*---*---*---*
 
+ADD_SUBDIRECTORY(third_party)
+
+# *---*---*---*---*---*---*
+
 IF(MSVC)
   ADD_COMPILE_OPTIONS(/W4 /WX)
 ELSE()
@@ -45,8 +49,6 @@ IF(WR_ENABLE_TSAN)
 ENDIF()
 
 # *---*---*---*---*---*---*
-
-ADD_SUBDIRECTORY(third_party)
 
 ADD_SUBDIRECTORY(src)
 
