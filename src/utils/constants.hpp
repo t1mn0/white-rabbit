@@ -4,8 +4,8 @@
 
 /* ------------------------------------------------------------------- */
 
-// If any of these functions or constants are required in other pseudo-modules
-// in the future, then `utils`-dir will be moved a few folders higher and make it common;
+/* If any of these functions or constants are required in other pseudo-modules in the future, then
+ * `utils`-dir will be moved a few folders higher and make it common; */
 
 namespace wr::utils {
 
@@ -30,7 +30,8 @@ inline constexpr std::size_t CACHE_LINE_SIZE = 64;
  *  But if we have a large number of requests to our circular buffer, it could be quite sloooooow...
  *
  *  But what if there was another operation that was isomorphic to the modulo, but much faster??
- *  And this operation is a logical AND. However, this trick only works only if we have a capacity of 2^N.
+ *  And this operation is a logical AND. However, this trick only works only if we have a capacity
+ * of 2^N.
  *
  *  >> [If capacity := 2^N => global % capacity ~= global & (mask)]
  *

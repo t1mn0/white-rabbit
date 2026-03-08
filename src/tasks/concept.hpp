@@ -1,6 +1,7 @@
 #pragma once
 
 #include <concepts>
+
 #include <vvv/list.hpp>
 
 namespace wr::task {

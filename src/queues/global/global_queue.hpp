@@ -1,32 +1,31 @@
 #pragma once
 
-#include <vvv/list.hpp>
-
-#include "../../tasks/concept.hpp"
-
 #include <condition_variable>
 #include <mutex>
 #include <optional>
+
+#include <vvv/list.hpp>
+
+#include "../../tasks/concept.hpp"
 
 namespace wr::queues {
 
 // >> Unboundeds
 // >> Blocking
 // >> MP-MC
-template <task::Task TaskT>
-class GlobalQueue {
-  public:  // member-types:
+template <task::Task TaskT> class GlobalQueue {
+  public:  // nested types:
     using TaskPtr = TaskT*;
     using Batch = vvv::IntrusiveList<TaskT>;
 
-  private:  // fields:
+  private:  // data members:
     vvv::IntrusiveList<TaskT> buffer_;
 
     // Point of contention:
     mutable std::mutex mutex_;  // `mutable` since it is used in the constant method `.is_empty()`
     std::condition_variable not_empty_;
 
-  public:  // member-functions:
+  public:  // member functions:
     GlobalQueue() = default;
     ~GlobalQueue() = default;
     GlobalQueue(const GlobalQueue&) = delete;             // non-copyable;
@@ -52,7 +51,7 @@ class GlobalQueue {
     // O(max_count) complexity
     std::optional<Batch> try_pop_batch(size_t max_count) noexcept;
 
-  private:  // member-functions:
+  private:  // member functions:
     // `.is_empty()` needed not for the internal logic of shifting tasks, but for
     // external monitoring of the system status and for the logic of scheduler's shutdown:
     bool is_empty() const noexcept;
@@ -63,14 +62,13 @@ class GlobalQueue {
 
 /* ---------------------------------- IMPLEMENTATION ---------------------------------- */
 
-template <task::Task TaskT>
-void GlobalQueue<TaskT>::push(TaskPtr task) noexcept {
+template <task::Task TaskT> void GlobalQueue<TaskT>::push(TaskPtr task) noexcept {
     {
         std::lock_guard lock(mutex_);
 
-        // An argument of the `IntrusiveListNode*` type is expected in
-        // `IntrusiveList<TaskT>.PushBack(Node* node)`; But since `TaskT`
-        // is a special case of `IntrusiveListNode`, this operation is acceptable:
+        /* An argument of the `IntrusiveListNode*` type is expected in
+         * `IntrusiveList<TaskT>.PushBack(Node* node)`; But since `TaskT` is a special case of
+         * `IntrusiveListNode`, this operation is acceptable: */
         buffer_.PushBack(task);  // implicit upcast: TaskT* -> IntrusiveListNode*;
     }
 
@@ -89,8 +87,7 @@ std::optional<typename GlobalQueue<TaskT>::TaskPtr> GlobalQueue<TaskT>::try_pop(
     return buffer_.PopFrontNonEmpty();  // implicit downcast: IntrusiveListNode* -> TaskT*;;
 }
 
-template <task::Task TaskT>
-void GlobalQueue<TaskT>::push_batch(Batch&& batch) noexcept {
+template <task::Task TaskT> void GlobalQueue<TaskT>::push_batch(Batch&& batch) noexcept {
     if (batch.IsEmpty()) {
         return;
     }
@@ -126,13 +123,11 @@ auto GlobalQueue<TaskT>::try_pop_batch(size_t max_count) noexcept
     return result;
 }
 
-template <task::Task TaskT>
-bool GlobalQueue<TaskT>::is_empty() const noexcept {
+template <task::Task TaskT> bool GlobalQueue<TaskT>::is_empty() const noexcept {
     ///
     std::lock_guard lock(mutex_);
     return buffer_.IsEmpty();
     ///
 }
-
 
 }  // namespace wr::queues

@@ -1,12 +1,13 @@
 #pragma once
 
-#include "throttler.hpp"
 #include <optional>
+
+#include "throttler.hpp"
 
 namespace wr::coord {
 
-// An action for the worker what to do
-// depending on the current number of thieves, which is determined by the Coordinator.
+/* An action for the worker what to do depending on the current number of thieves, which is
+ * determined by the Coordinator */
 enum class Action : uint8_t {
     Steal,    /* have semaphore's Permit */
     Park,     /* command to park that worker */
@@ -15,14 +16,20 @@ enum class Action : uint8_t {
 };
 
 /*
- * @brief CoordDirective is a component that encapsulates the result of a request to the Coordinator.
- * The Worker asks the coordinator if it can look for a victim
- * response comes with the status
+ * @brief CoordDirective is a component that encapsulates the result of a request to the
+ * Coordinator. The Worker asks the coordinator if it can look for a victim response comes with the
+ * status
  *
  */
 class CoordDirective {
   public:  // nested types:
     using Permit = Throttler::StealPermit;
+
+  private:  // data members:
+    explicit CoordDirective(Action action, std::optional<Permit> permit = std::nullopt);
+
+    Action action_;
+    std::optional<Permit> permit_;
 
   public:  // member static functions:
     static CoordDirective Steal(Permit&& permit);
@@ -43,12 +50,6 @@ class CoordDirective {
     bool should_park() const noexcept;
 
     [[nodiscard]] Permit unwrap_permit() &&;
-
-  private:
-    explicit CoordDirective(Action action, std::optional<Permit> permit = std::nullopt);
-
-    Action action_;
-    std::optional<Permit> permit_;
 };
 
 /* ---------------------------------- IMPLEMENTATION ---------------------------------- */

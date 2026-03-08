@@ -1,10 +1,11 @@
 #pragma once
 
+#include <cstddef>
+#include <cstdint>
+
 #include "ring_buffer.hpp"
 #include "tasks/concept.hpp"
 #include "utils/constants.hpp"
-#include <cstddef>
-#include <cstdint>
 
 namespace wr::queues {
 
@@ -29,9 +30,20 @@ namespace wr::queues {
 template <task::Task TaskType, size_t Capacity>
     requires utils::constants::check::IsPowerOfTwo<Capacity>
 class SharedState {
-  public:
+  public:  // nested types:
     using ValueType = typename RingBuffer<TaskType, Capacity>::ValueType;
 
+  private:  // data members:
+    /* Storage for task pointers. */
+    alignas(utils::constants::CACHE_LINE_SIZE) RingBuffer<TaskType, Capacity> tasks_;
+
+    /* First valid element index [global]. Modify by stealers. */
+    alignas(utils::constants::CACHE_LINE_SIZE) std::atomic<uint64_t> top_ = 0;
+
+    /* Next free slot index [global]. Modify by owner only. */
+    alignas(utils::constants::CACHE_LINE_SIZE) std::atomic<uint64_t> bottom_ = 0;
+
+  public:  // member functions:
     SharedState() = default;
 
     SharedState(const SharedState&) = delete;
@@ -87,17 +99,6 @@ class SharedState {
      */
     [[nodiscard]]
     bool try_increment_top_by(uint64_t expected, uint64_t count) noexcept;
-
-
-  private:
-    /* Storage for task pointers. */
-    alignas(utils::constants::CACHE_LINE_SIZE) RingBuffer<TaskType, Capacity> tasks_;
-
-    /* First valid element index [global]. Modify by stealers. */
-    alignas(utils::constants::CACHE_LINE_SIZE) std::atomic<uint64_t> top_{0};
-
-    /* Next free slot index [global]. Modify by owner only. */
-    alignas(utils::constants::CACHE_LINE_SIZE) std::atomic<uint64_t> bottom_{0};
 };
 
 /* ---------------------------------- IMPLEMENTATION ---------------------------------- */
@@ -157,6 +158,5 @@ bool SharedState<TaskType, Capacity>::try_increment_top_by(uint64_t expected, ui
     return top_.compare_exchange_strong(expected, expected + count);
     ///
 }
-
 
 };  // namespace wr::queues
