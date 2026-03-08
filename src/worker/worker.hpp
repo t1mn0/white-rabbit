@@ -1,6 +1,7 @@
 #pragma once
 
-#include "../exec/executor.hpp"
+#include "../exec/config/concept.hpp"
+#include "../exec/config/config.hpp"
 #include "../queues/local/ws_queue.hpp"
 #include <cstddef>
 #include <optional>

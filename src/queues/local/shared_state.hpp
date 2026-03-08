@@ -1,6 +1,5 @@
 #pragma once
 
-#include "exec/config/config.hpp"
 #include "ring_buffer.hpp"
 #include "tasks/concept.hpp"
 #include "utils/constants.hpp"

@@ -13,7 +13,7 @@ namespace wr {
 template <task::Task TaskType, config::ExecutionConfig Config = config::DefaultConfig>
 class WsExecutor {
   public:
-    using WorkerType = worker::Worker<TaskType, Config>;
+    using WorkerType = Worker<TaskType, Config>;
 
   private:
     std::vector<std::unique_ptr<WorkerType>> workers_;

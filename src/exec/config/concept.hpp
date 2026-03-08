@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../queues/local/utils.hpp"
+#include "../../utils/constants.hpp"
 
 #include <concepts>
 

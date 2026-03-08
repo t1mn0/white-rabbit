@@ -10,7 +10,7 @@
 
 namespace wr::queues {
 
-// >> Unbounded
+// >> Unboundeds
 // >> Blocking
 // >> MP-MC
 template <task::Task TaskT>

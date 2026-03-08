@@ -53,62 +53,62 @@ class CoordDirective {
 
 /* ---------------------------------- IMPLEMENTATION ---------------------------------- */
 
-CoordDirective CoordDirective::Steal(Permit&& permit) {
+inline CoordDirective CoordDirective::Steal(Permit&& permit) {
     ///
     return CoordDirective(Action::Steal, std::move(permit));
     ///
 }
 
-CoordDirective CoordDirective::Park() {
+inline CoordDirective CoordDirective::Park() {
     ///
     return CoordDirective(Action::Park);
     ///
 }
 
-CoordDirective CoordDirective::Retry() {
+inline CoordDirective CoordDirective::Retry() {
     ///
     return CoordDirective(Action::Retry);
     ///
 }
 
-CoordDirective CoordDirective::Terminate() {
+inline CoordDirective CoordDirective::Terminate() {
     ///
     return CoordDirective(Action::Terminate);
     ///
 }
 
-bool CoordDirective::should_steal() const noexcept {
+inline bool CoordDirective::should_steal() const noexcept {
     ///
     return action_ == Action::Steal;
     ///
 }
 
-bool CoordDirective::should_retry() const noexcept {
+inline bool CoordDirective::should_retry() const noexcept {
     ///
     return action_ == Action::Retry;
     ///
 }
 
-bool CoordDirective::should_terminate() const noexcept {
+inline bool CoordDirective::should_terminate() const noexcept {
     ///
     return action_ == Action::Terminate;
     ///
 }
 
-bool CoordDirective::should_park() const noexcept {
+inline bool CoordDirective::should_park() const noexcept {
     ///
     return action_ == Action::Park;
     ///
 }
 
-CoordDirective::Permit CoordDirective::unwrap_permit() && {
+inline CoordDirective::Permit CoordDirective::unwrap_permit() && {
     ///
     assert(should_steal() && permit_.has_value());
     return std::move(*permit_);
     ///
 }
 
-CoordDirective::CoordDirective(Action action, std::optional<Permit> permit)
+inline CoordDirective::CoordDirective(Action action, std::optional<Permit> permit)
     : action_(action), permit_(std::move(permit)) {}
 
 }  // namespace wr::coord
