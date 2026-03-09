@@ -29,7 +29,7 @@ class WorkStealingQueue {
     friend class StealHandle<TaskT, Capacity>;
 
   public:  // member functions:
-    WorkStealingQueue();
+    WorkStealingQueue() = default;
     ~WorkStealingQueue() = default;
 
     WorkStealingQueue(const WorkStealingQueue&) = delete;             // non-copyable
@@ -143,7 +143,7 @@ template <task::Task TaskT, size_t Capacity>
     requires utils::constants::check::IsPowerOfTwo<Capacity>
 auto WorkStealingQueue<TaskT, Capacity>::create_stealer() noexcept -> StealHandle<TaskT, Capacity> {
     ///
-    return StealHandle<TaskT, Capacity>(state_);
+    return StealHandle<TaskT, Capacity>(&state_);
     ///
 }
 

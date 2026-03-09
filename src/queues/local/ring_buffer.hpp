@@ -92,14 +92,14 @@ class RingBuffer {
      * @param index Global index
      * @return Task pointer stored at that logical position.
      */
-    auto load(uint64_t index) const noexcept -> ValueType;
+    auto load(uint64_t index, std::memory_order mo = std::memory_order_seq_cst) const noexcept -> ValueType;
 
     /**
      * @brief Store task pointer into slot.
      * @param index Global index.
      * @param value Task ptr to store.
      */
-    void store(uint64_t index, ValueType value) noexcept;
+    void store(uint64_t index, ValueType value, std::memory_order mo = std::memory_order_seq_cst) noexcept;
 
     /**
      * @brief Convert global index to local slot index.
@@ -116,26 +116,23 @@ class RingBuffer {
 
 template <task::Task TaskType, size_t Capacity>
     requires utils::constants::check::IsPowerOfTwo<Capacity>
-auto RingBuffer<TaskType, Capacity>::load(uint64_t index) const noexcept -> RingBuffer<TaskType, Capacity>::ValueType {
-
+auto RingBuffer<TaskType, Capacity>::load(uint64_t index, std::memory_order mo) const noexcept -> RingBuffer<TaskType, Capacity>::ValueType {
     ///
-    return slots_[to_local_index(index)].load();
+    return slots_[to_local_index(index)].load(mo);
     ///
 }
 
 template <task::Task TaskType, size_t Capacity>
     requires utils::constants::check::IsPowerOfTwo<Capacity>
-void RingBuffer<TaskType, Capacity>::store(uint64_t index, ValueType val) noexcept {
-
+void RingBuffer<TaskType, Capacity>::store(uint64_t index, ValueType val, std::memory_order mo) noexcept {
     ///
-    slots_[to_local_index(index)].store(val);
+    slots_[to_local_index(index)].store(val, mo);
     ///
 }
 
 template <task::Task TaskType, size_t Capacity>
     requires utils::constants::check::IsPowerOfTwo<Capacity>
 constexpr size_t RingBuffer<TaskType, Capacity>::to_local_index(uint64_t global) noexcept {
-
     /* since size_t has system-dependent size, we have to guarantee bit safety */
     return static_cast<size_t>(global) & kMask;
 }
@@ -143,7 +140,6 @@ constexpr size_t RingBuffer<TaskType, Capacity>::to_local_index(uint64_t global)
 template <task::Task TaskType, size_t Capacity>
     requires utils::constants::check::IsPowerOfTwo<Capacity>
 constexpr size_t RingBuffer<TaskType, Capacity>::capacity() const noexcept {
-
     ///
     return Capacity;
     ///
