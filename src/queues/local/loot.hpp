@@ -114,9 +114,8 @@ template <typename A>
 TaskType* Loot<TaskType>::unwrap_or(A&& some_action) && {
     if (is_success()) {
         return reward_;
-    } else {
-        some_action();
     }
+    return some_action();
 }
 
 template <task::Task TaskType>
