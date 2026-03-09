@@ -52,7 +52,8 @@ class Throttler /* Semaphore */ {
 
     [[nodiscard]] std::optional<StealPermit> try_acquire_permit() noexcept;
 
-    template <WakeCondition Predicate> void park(Predicate&& stop_waiting) noexcept;
+    template <WakeCondition Predicate>
+    void park(Predicate&& stop_waiting) noexcept;
 
     void notify_work_available() noexcept;
 
@@ -96,7 +97,8 @@ inline std::optional<Throttler::StealPermit> Throttler::try_acquire_permit() noe
     return std::nullopt;
 }
 
-template <WakeCondition Predicate> void Throttler::park(Predicate&& stop_waiting) noexcept {
+template <WakeCondition Predicate>
+void Throttler::park(Predicate&& stop_waiting) noexcept {
     // `stop_waiting` should be noexcept ^
     std::unique_lock<std::mutex> lock(wait_mutex_);
     parked_count_.fetch_add(1);
@@ -105,11 +107,17 @@ template <WakeCondition Predicate> void Throttler::park(Predicate&& stop_waiting
         // Condition to wake:
         // 1. external reason (stop_waiting)
         // 2. or an internal work hint (work_hint)
-        return stop_waiting() || work_hint_.load();
+        if (stop_waiting()) {
+            return true;
+        }
+        if (work_hint_.load()) {
+            work_hint_.store(false);
+            return true;
+        }
+        return false;
     });
 
     parked_count_.fetch_sub(1);
-    work_hint_.store(false);
 }
 
 inline void Throttler::notify_work_available() noexcept {
@@ -136,21 +144,15 @@ inline void Throttler::notify_all_workers() noexcept {
 }
 
 inline size_t Throttler::searchers_count() const noexcept {
-    ///
     return searchers_count_.load();
-    ///
 }
 
 inline size_t Throttler::parked_count() const noexcept {
-    ///
     return parked_count_.load();
-    ///
 }
 
 inline void Throttler::on_permit_released() noexcept {
-    ///
     searchers_count_.fetch_sub(1);  // just guarantee to no leaks in the semaphore
-    ///
 }
 
 }  // namespace wr::coord
