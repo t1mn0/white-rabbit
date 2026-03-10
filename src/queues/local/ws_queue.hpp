@@ -1,23 +1,34 @@
 #pragma once
 
-#include "../../tasks/concept.hpp"
-#include "shared_state.hpp"
-#include "steal_handle.hpp"
-#include "utils/constants.hpp"
 #include <atomic>
 #include <cstddef>
 #include <optional>
 #include <vvv/list.hpp>
+
+#include "../../tasks/concept.hpp"
+#include "shared_state.hpp"
+#include "steal_handle.hpp"
+#include "utils/constants.hpp"
 
 namespace wr::queues {
 
 // >> Bounded
 // >> Lock-free
 // >> SP-MC
-template <task::Task TaskType, size_t Capacity>
+template <task::Task TaskT, size_t Capacity>
     requires utils::constants::check::IsPowerOfTwo<Capacity>
 class WorkStealingQueue {
-  public:  // member-functions:
+  public:  // nested types:
+    using TaskPtr = TaskT*;
+    using Batch = vvv::IntrusiveList<TaskT>;
+
+  private:  // data members:
+    SharedState<TaskT, Capacity> state_;
+
+  public:  // friendship declaration:
+    friend class StealHandle<TaskT, Capacity>;
+
+  public:  // member functions:
     WorkStealingQueue();
     ~WorkStealingQueue() = default;
 
@@ -31,13 +42,13 @@ class WorkStealingQueue {
     /*
      * @brief Push task at the bottom, returns False if queue is full.
      */
-    bool try_push(TaskType* item) noexcept;
+    bool try_push(TaskPtr item) noexcept;
 
     /*  -------------------- Consumer API -------------------- */
     /*
      * @brief Try pop task from the bottom, returns nullopt if empty.
      */
-    std::optional<TaskType*> try_pop() noexcept;
+    std::optional<TaskPtr> try_pop() noexcept;
 
 
     /*
@@ -46,22 +57,17 @@ class WorkStealingQueue {
      *
      * @return List of offloaded tasks.
      */
-    std::optional<vvv::IntrusiveList<TaskType>> offload_half() noexcept;
+    std::optional<Batch> offload_half() noexcept;
 
     [[nodiscard]]
-    /* !! TODO !! */ StealHandle<TaskType, Capacity> create_stealer() noexcept;
-
-  private:  // fields:
-    SharedState<TaskType, Capacity> state_;
-
-    friend class StealHandle<TaskType, Capacity>;
+    /* !! TODO !! */ StealHandle<TaskT, Capacity> create_stealer() noexcept;
 };
 
 /* ---------------------------------- IMPLEMENTATION ---------------------------------- */
 
-template <task::Task TaskType, size_t Capacity>
+template <task::Task TaskT, size_t Capacity>
     requires utils::constants::check::IsPowerOfTwo<Capacity>
-bool WorkStealingQueue<TaskType, Capacity>::try_push(TaskType* task) noexcept {
+bool WorkStealingQueue<TaskT, Capacity>::try_push(TaskPtr task) noexcept {
     /*
      * since stealers are never touch the bottom of the buffer
      * => only worker (producer) works with it on a separate cache-line
@@ -85,9 +91,9 @@ bool WorkStealingQueue<TaskType, Capacity>::try_push(TaskType* task) noexcept {
     return true;
 }
 
-template <task::Task TaskType, size_t Capacity>
+template <task::Task TaskT, size_t Capacity>
     requires utils::constants::check::IsPowerOfTwo<Capacity>
-auto WorkStealingQueue<TaskType, Capacity>::try_pop() noexcept -> std::optional<TaskType*> {
+auto WorkStealingQueue<TaskT, Capacity>::try_pop() noexcept -> std::optional<TaskPtr> {
 
     /* relaxedd mo here for the same reason [worker is the only one that has access tthe bottom]  */
     auto bt = state_.load_bottom(std::memory_order::relaxed) - 1;
@@ -133,19 +139,19 @@ auto WorkStealingQueue<TaskType, Capacity>::try_pop() noexcept -> std::optional<
     }
 }
 
-template <task::Task TaskType, size_t Capacity>
+template <task::Task TaskT, size_t Capacity>
     requires utils::constants::check::IsPowerOfTwo<Capacity>
-auto WorkStealingQueue<TaskType, Capacity>::create_stealer() noexcept -> StealHandle<TaskType, Capacity> {
+auto WorkStealingQueue<TaskT, Capacity>::create_stealer() noexcept -> StealHandle<TaskT, Capacity> {
     ///
-    return StealHandle<TaskType, Capacity>(state_);
+    return StealHandle<TaskT, Capacity>(state_);
     ///
 }
 
-template <task::Task TaskType, size_t Capacity>
+template <task::Task TaskT, size_t Capacity>
     requires utils::constants::check::IsPowerOfTwo<Capacity>
-auto WorkStealingQueue<TaskType, Capacity>::offload_half() noexcept -> std::optional<vvv::IntrusiveList<TaskType>> {
+auto WorkStealingQueue<TaskT, Capacity>::offload_half() noexcept -> std::optional<Batch> {
 
-    vvv::IntrusiveList<TaskType> batch;
+    vvv::IntrusiveList<TaskT> batch;
 
     auto bt = state_.load_bottom();
     auto top = state_.load_top();

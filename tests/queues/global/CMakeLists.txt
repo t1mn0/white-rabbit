@@ -1,5 +1,5 @@
 ADD_EXECUTABLE(global_queue_tests
-    unit.cpp
+    unit.cc
 )
 
 TARGET_LINK_LIBRARIES(global_queue_tests
