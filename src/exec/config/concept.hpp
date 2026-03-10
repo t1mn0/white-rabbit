@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../../queues/local/utils.hpp"
-
 #include <concepts>
+
+#include "../../utils/constants.hpp"
 
 namespace wr::config {
 

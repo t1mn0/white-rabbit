@@ -1,9 +1,10 @@
 #pragma once
 
-#include "../../tasks/concept.hpp"
 #include <cassert>
 #include <cstdint>
 #include <optional>
+
+#include "../../tasks/concept.hpp"
 
 namespace wr::queues {
 
@@ -15,11 +16,11 @@ enum class State : uint8_t {
 
 template <task::Task TaskType>
 class Loot {
-  private:  // member-functions:
-    Loot(State, TaskType*) noexcept;
-    explicit Loot(State state) noexcept;
+  private:  // data members:
+    State state_{State::Empty};
+    TaskType* reward_{nullptr};
 
-  public:  // member-functions:
+  public:  // member functions:
     [[nodiscard]] auto static Success(TaskType* task) noexcept -> Loot;
     [[nodiscard]] auto static Empty() noexcept -> Loot;
     [[nodiscard]] auto static Retry() noexcept -> Loot;
@@ -40,9 +41,9 @@ class Loot {
     /* @brief Safely extracts the task as optional */
     std::optional<TaskType*> as_optional() && noexcept;
 
-  private:  // fields:
-    State state_{State::Empty};
-    TaskType* reward_{nullptr};
+  private:  // member functions:
+    Loot(State, TaskType*) noexcept;
+    explicit Loot(State state) noexcept;
 };
 
 /* ---------------------------------- IMPLEMENTATION ---------------------------------- */
@@ -122,6 +123,5 @@ template <task::Task TaskType>
 std::optional<TaskType*> Loot<TaskType>::as_optional() && noexcept {
     return is_success() ? std::optional{reward_} : std::nullopt;
 }
-
 
 };  // namespace wr::queues

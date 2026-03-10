@@ -1,12 +1,13 @@
 #pragma once
 
-#include "throttler.hpp"
 #include <optional>
+
+#include "throttler.hpp"
 
 namespace wr::coord {
 
-// An action for the worker what to do
-// depending on the current number of thieves, which is determined by the Coordinator.
+/* An action for the worker what to do depending on the current number of thieves, which is
+ * determined by the Coordinator */
 enum class Action : uint8_t {
     Steal,    /* have semaphore's Permit */
     Park,     /* command to park that worker */
@@ -15,100 +16,82 @@ enum class Action : uint8_t {
 };
 
 /*
- * @brief CoordDirective is a component that encapsulates the result of a request to the Coordinator.
- * The Worker asks the coordinator if it can look for a victim
- * response comes with the status
+ * @brief CoordDirective is a component that encapsulates the result of a request to the
+ * Coordinator. The Worker asks the coordinator if it can look for a victim response comes with the
+ * status
  *
  */
-class CoordDirective {
+class Directive {
   public:  // nested types:
     using Permit = Throttler::StealPermit;
 
-  public:  // member static functions:
-    static CoordDirective Steal(Permit&& permit);
-
-    static CoordDirective Park();
-
-    static CoordDirective Retry();
-
-    static CoordDirective Terminate();
-
-  public:  // member functions:
-    bool should_steal() const noexcept;
-
-    bool should_retry() const noexcept;
-
-    bool should_terminate() const noexcept;
-
-    bool should_park() const noexcept;
-
-    [[nodiscard]] Permit unwrap_permit() &&;
-
-  private:
-    explicit CoordDirective(Action action, std::optional<Permit> permit = std::nullopt);
+  private:  // data members:
+    explicit Directive(Action action, std::optional<Permit> permit = std::nullopt);
 
     Action action_;
     std::optional<Permit> permit_;
+
+  public:  // member static functions:
+    static Directive Steal(Permit&& permit);
+
+    static Directive Park();
+
+    static Directive Retry();
+
+    static Directive Terminate();
+
+  public:  // member functions:
+    bool is_should_steal() const noexcept;
+
+    bool is_should_retry() const noexcept;
+
+    bool is_should_terminate() const noexcept;
+
+    bool is_should_park() const noexcept;
+
+    [[nodiscard]] Permit unwrap_permit() &&;
 };
 
 /* ---------------------------------- IMPLEMENTATION ---------------------------------- */
 
-CoordDirective CoordDirective::Steal(Permit&& permit) {
-    ///
-    return CoordDirective(Action::Steal, std::move(permit));
-    ///
+inline Directive Directive::Steal(Permit&& permit) {
+    return Directive(Action::Steal, std::move(permit));
 }
 
-CoordDirective CoordDirective::Park() {
-    ///
-    return CoordDirective(Action::Park);
-    ///
+inline Directive Directive::Park() {
+    return Directive(Action::Park);
 }
 
-CoordDirective CoordDirective::Retry() {
-    ///
-    return CoordDirective(Action::Retry);
-    ///
+inline Directive Directive::Retry() {
+    return Directive(Action::Retry);
 }
 
-CoordDirective CoordDirective::Terminate() {
-    ///
-    return CoordDirective(Action::Terminate);
-    ///
+inline Directive Directive::Terminate() {
+    return Directive(Action::Terminate);
 }
 
-bool CoordDirective::should_steal() const noexcept {
-    ///
+inline bool Directive::is_should_steal() const noexcept {
     return action_ == Action::Steal;
-    ///
 }
 
-bool CoordDirective::should_retry() const noexcept {
-    ///
+inline bool Directive::is_should_retry() const noexcept {
     return action_ == Action::Retry;
-    ///
 }
 
-bool CoordDirective::should_terminate() const noexcept {
-    ///
+inline bool Directive::is_should_terminate() const noexcept {
     return action_ == Action::Terminate;
-    ///
 }
 
-bool CoordDirective::should_park() const noexcept {
-    ///
+inline bool Directive::is_should_park() const noexcept {
     return action_ == Action::Park;
-    ///
 }
 
-CoordDirective::Permit CoordDirective::unwrap_permit() && {
-    ///
-    assert(should_steal() && permit_.has_value());
+inline Directive::Permit Directive::unwrap_permit() && {
+    assert(is_should_steal() && permit_.has_value());
     return std::move(*permit_);
-    ///
 }
 
-CoordDirective::CoordDirective(Action action, std::optional<Permit> permit)
+inline Directive::Directive(Action action, std::optional<Permit> permit)
     : action_(action), permit_(std::move(permit)) {}
 
 }  // namespace wr::coord
