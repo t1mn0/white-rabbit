@@ -3,7 +3,7 @@
 #include <thread>
 #include <vector>
 
-#include "../../src/coordination/coordinator.hpp"
+#include "coordination/coordinator.hpp"
 
 using namespace std::chrono_literals;
 

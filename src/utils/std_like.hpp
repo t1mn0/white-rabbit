@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef WITH_TWIST
+#ifdef WR_WITH_TWIST
 
 #    include <twist/ed/std/atomic.hpp>
 #    include <twist/ed/std/condition_variable.hpp>

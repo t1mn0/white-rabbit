@@ -21,7 +21,7 @@ ENDIF()
 # *---*---*---*---*---*---*
 
 IF(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
-  IF(WR_BUILD_TESTS OR WR_ENABLE_TWIST)
+  IF(WR_BUILD_TESTS OR WR_WITH_TWIST)
     # GTest
     FetchContent_Declare(
       googletest
@@ -37,10 +37,10 @@ IF(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     FetchContent_MakeAvailable(googletest)
   ENDIF()
 
-  IF(WR_ENABLE_TWIST)
+  IF(WR_WITH_TWIST)
     MESSAGE(STATUS "[white-rabbit] : TWIST [ON] <:-:> [fault injection + simulation]")
 
-  # Twist features
+    # Twist features
     SET(TWIST_BUILD_TESTS OFF CACHE BOOL "" FORCE)
     SET(TWIST_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
     SET(TWIST_FAULTY ON CACHE BOOL "Enables Twist fault injection" FORCE)
