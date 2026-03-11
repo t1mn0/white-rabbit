@@ -1,0 +1,1 @@
+ADD_TWIST_TEST(test_fi_steal_stress steal_stress.cc)
