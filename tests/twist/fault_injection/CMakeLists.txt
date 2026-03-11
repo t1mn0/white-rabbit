@@ -1,1 +1,1 @@
-ADD_TWIST_TEST(test_fi_steal_stress steal_stress.cc)
+ADD_TWIST_TEST(ronaldo_test ronaldo.cc)
