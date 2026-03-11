@@ -2,14 +2,13 @@
 
 #ifdef WITH_TWIST
 
-#    include <atomic>
 #    include <twist/ed/std/atomic.hpp>
 #    include <twist/ed/std/condition_variable.hpp>
 #    include <twist/ed/std/mutex.hpp>
 #    include <twist/ed/std/thread.hpp>
 
-namenamespace wr {
-    nanamespace stdlike = ::twist::ed::std;
+namespace wr {
+namespace stdlike = ::twist::ed::std;
 }
 
 #else
@@ -22,7 +21,6 @@ namenamespace wr {
 namespace wr {
 
 namespace stdlike = ::std;
-
 }
 
 #endif
