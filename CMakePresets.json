@@ -1,0 +1,47 @@
+{
+  "version": 10,
+  "cmakeMinimumRequired": { "major": 3, "minor": 30, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "dev",
+      "displayName": "Dev (GTest only)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "WR_BUILD_TESTS": "ON",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "dev-twist",
+      "displayName": "Dev (GTest + Twist, Clang)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-twist",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++",
+        "WR_BUILD_TESTS": "ON",
+        "WR_ENABLE_TWIST": "ON",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "dev-asan",
+      "displayName": "Dev + ASAN",
+      "inherits": "dev",
+      "binaryDir": "${sourceDir}/build-asan",
+      "cacheVariables": {
+        "WR_ENABLE_ASAN": "ON"
+      }
+    },
+    {
+      "name": "dev-tsan",
+      "displayName": "Dev + TSAN",
+      "inherits": "dev",
+      "binaryDir": "${sourceDir}/build-tsan",
+      "cacheVariables": {
+        "WR_ENABLE_TSAN": "ON"
+      }
+    }
+  ]
+}
