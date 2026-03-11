@@ -6,9 +6,10 @@ PROJECT(white_rabbit
 
 # *---*---*---*---*---*---*
 
-OPTION(WR_BUILD_TESTS "Build unit tests" ON)
-OPTION(WR_BUILD_EXAMPLES "Build examples" ON)
+OPTION(WR_BUILD_TESTS "Build unit tests" OFF)
+OPTION(WR_BUILD_EXAMPLES "Build examples" OFF)
 OPTION(WR_BUILD_ANALYSIS "Build benchmarks" OFF)
+OPTION(WR_ENABLE_TWIST "Build with Twist" OFF)
 OPTION(WR_ENABLE_ASAN "Enable Address Sanitizer" OFF)
 OPTION(WR_ENABLE_TSAN "Enable Thread Sanitizer" OFF)
 
@@ -25,6 +26,9 @@ ADD_SUBDIRECTORY(third_party)
 # *---*---*---*---*---*---*
 
 IF(MSVC)
+  # Apply strict compiler warnings for MSVC
+  # /W4: Set warning level 4
+  # /WX: Treat warnings as errors
   ADD_COMPILE_OPTIONS(/W4 /WX)
 ELSE()
   ADD_COMPILE_OPTIONS(
@@ -37,14 +41,14 @@ IF(WR_ENABLE_ASAN AND WR_ENABLE_TSAN)
 ENDIF()
 
 IF(WR_ENABLE_ASAN)
-  MESSAGE(STATUS "Address Sanitizer Enabled")
-  ADD_COMPILE_OPTIONS(-fsanitize=address)
+  MESSAGE(STATUS "[white-rabbit] : Address Sanitizer Enabled")
+  ADD_COMPILE_OPTIONS(-fsanitize=address -g)
   ADD_LINK_OPTIONS(-fsanitize=address)
 ENDIF()
 
 IF(WR_ENABLE_TSAN)
-  MESSAGE(STATUS "Thread Sanitizer Enabled")
-  ADD_COMPILE_OPTIONS(-fsanitize=thread)
+  MESSAGE(STATUS "[white-rabbit] : Thread Sanitizer Enabled")
+  ADD_COMPILE_OPTIONS(-fsanitize=thread -g)
   ADD_LINK_OPTIONS(-fsanitize=thread)
 ENDIF()
 
@@ -55,8 +59,8 @@ ADD_SUBDIRECTORY(src)
 # *---*---*---*---*---*---*
 
 IF(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
-  IF(WR_BUILD_TESTS)
-    enable_testing()
+  IF(WR_BUILD_TESTS OR WR_ENABLE_TWIST)
+    ENABLE_TESTING()
     ADD_SUBDIRECTORY(tests)
   ENDIF()
 
