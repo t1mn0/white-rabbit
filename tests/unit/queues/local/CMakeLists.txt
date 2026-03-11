@@ -1,6 +1,6 @@
 SET(LOCAL_QUEUE_SOURCES
-  # ${CMAKE_CURRENT_SOURCE_DIR}/unit.cc
-  ${CMAKE_CURRENT_SOURCE_DIR}/ringbuffer.cc
+  unit.cc
+  ringbuffer.cc
   # ${CMAKE_CURRENT_SOURCE_DIR}/sharedstate.cc
 )
 

@@ -4,7 +4,7 @@
   "configurePresets": [
     {
       "name": "dev",
-      "displayName": "Dev (GTest only)",
+      "displayName": "[WR_WITH_GTEST] : GTest only",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
@@ -14,20 +14,20 @@
     },
     {
       "name": "dev-twist",
-      "displayName": "Dev (GTest + Twist, Clang)",
+      "displayName": "[WR_WITH_TWIST] : Twist + GTest",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build-twist",
       "cacheVariables": {
         "CMAKE_C_COMPILER": "clang",
         "CMAKE_CXX_COMPILER": "clang++",
         "WR_BUILD_TESTS": "ON",
-        "WR_ENABLE_TWIST": "ON",
+        "WR_WITH_TWIST": "ON",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       }
     },
     {
       "name": "dev-asan",
-      "displayName": "Dev + ASAN",
+      "displayName": "[WR_WITH_ASAN] : ASAN + GTest",
       "inherits": "dev",
       "binaryDir": "${sourceDir}/build-asan",
       "cacheVariables": {
@@ -36,7 +36,7 @@
     },
     {
       "name": "dev-tsan",
-      "displayName": "Dev + TSAN",
+      "displayName": "[WR_WITH_TSAN] : TSAN + GTest",
       "inherits": "dev",
       "binaryDir": "${sourceDir}/build-tsan",
       "cacheVariables": {

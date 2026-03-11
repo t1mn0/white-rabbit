@@ -1,0 +1,3 @@
+ADD_SUBDIRECTORY(simulation)
+ADD_SUBDIRECTORY(fault_injection)
+ADD_SUBDIRECTORY(model_checking)
