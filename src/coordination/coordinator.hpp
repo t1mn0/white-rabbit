@@ -30,7 +30,7 @@ class Coordinator {
 
     void shutdown() noexcept;
 
-    bool is_should_shutdown() const noexcept;
+    bool should_shutdown() const noexcept;
 };
 
 /* ---------------------------------- IMPLEMENTATION ---------------------------------- */
@@ -80,7 +80,7 @@ inline void Coordinator::shutdown() noexcept {
     semaphore_.notify_all_workers();
 }
 
-inline bool Coordinator::is_should_shutdown() const noexcept {
+inline bool Coordinator::should_shutdown() const noexcept {
     return shutdown_requested_.load();
 }
 

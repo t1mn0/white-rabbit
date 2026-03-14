@@ -1,9 +1,9 @@
 #include "queues/local/ring_buffer.hpp"
-#include "vvv/list.hpp"
 #include <gtest/gtest.h>
 #include <iostream>
+#include <ntrusive/intrusive.hpp>
 
-struct InnerTask : public vvv::IntrusiveListNode<InnerTask> {
+struct InnerTask : public IntrusiveListNode {
     int value;
 
     void run() noexcept {

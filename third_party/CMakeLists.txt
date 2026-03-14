@@ -2,20 +2,24 @@ INCLUDE(FetchContent)
 
 # *---*---*---*---*---*---*
 
-# Horovod
 FetchContent_Declare(
-    vvv
-    GIT_REPOSITORY https://gitlab.com/Lipovsky/vvv.git
+  ntrusive
+    GIT_REPOSITORY https://github.com/niko256/ntrusive.git
     GIT_TAG master
 )
+FetchContent_MakeAvailable(ntrusive)
 
 FetchContent_MakeAvailable(
-  vvv
+  ntrusive
 )
 
-IF (vvv_POPULATED)
-  ADD_LIBRARY(third_party_vvv INTERFACE)
-  TARGET_INCLUDE_DIRECTORIES(third_party_vvv INTERFACE ${vvv_SOURCE_DIR}/source)
+IF (ntrusive_POPULATED)
+  ADD_LIBRARY(third_party_ntrusive INTERFACE)
+
+  TARGET_INCLUDE_DIRECTORIES(third_party_ntrusive
+    INTERFACE
+      ${ntrusive_SOURCE_DIR}/include
+  )
 ENDIF()
 
 # *---*---*---*---*---*---*
@@ -25,8 +29,8 @@ IF(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     # GTest
     FetchContent_Declare(
       googletest
-      GIT_REPOSITORY https://github.com/google/googletest.git
-      GIT_TAG main
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG main
     )
     # ON: Sets the initial value to boolean True
     # CACHE: Stores the variable in CMakeCache.txt (persists across runs)
@@ -49,8 +53,8 @@ IF(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     # Twist framework
     FetchContent_Declare(
       twist
-      GIT_REPOSITORY https://gitlab.com/Lipovsky/twist.git
-      GIT_TAG master
+        GIT_REPOSITORY https://gitlab.com/Lipovsky/twist.git
+        GIT_TAG master
     )
     FetchContent_MakeAvailable(twist)
   ENDIF()
