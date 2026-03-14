@@ -4,17 +4,25 @@
 
 /* ------------------------------------------------------------------- */
 
-// If any of these functions or constants are required in other pseudo-modules
-// in the future, then `utils`-dir will be moved a few folders higher and make it common;
+/* If any of these functions or constants are required in other pseudo-modules in the future, then
+ * `utils`-dir will be moved a few folders higher and make it common; */
 
 namespace wr::utils {
 
 namespace constants {
 
-#ifdef __cpp_lib_hardware_interference_size
+#if defined(__cpp_lib_hardware_interference_size) && defined(__GNUC__) && !defined(__clang__)
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Winterference-size"
+
 inline constexpr std::size_t CACHE_LINE_SIZE = std::hardware_destructive_interference_size;
+
+#    pragma GCC diagnostic pop
+
 #else
-inline constexpr std::size_t CACHE_LINE_SIZE = 64;
+
+inline constexpr std::size_t CACHE_LINE_SIZE = (sizeof(std::size_t) == 8) ? 64 : 32;
+
 #endif
 
 /* ------------------------------------------------------------------- */
@@ -27,14 +35,15 @@ inline constexpr std::size_t CACHE_LINE_SIZE = 64;
  *  But if we have a large number of requests to our circular buffer, it could be quite sloooooow...
  *
  *  But what if there was another operation that was isomorphic to the modulo, but much faster??
- *  And this operation is a logical AND. However, this trick only works only if we have a capacity of 2^N.
+ *  And this operation is a logical AND. However, this trick only works only if we have a capacity
+ * of 2^N.
  *
  *  >> [If capacity := 2^N => global % capacity ~= global & (mask)]
  *
  *  => The mask := [capacity - 1] cuts off all bits above the capacity
  *  and leaving only the remainder. That's exactly what modulo does.
  *
- *  ---------------------------
+ *  *---------------------------*
  *    EXAMPLE :
  *    Capacity = 8 = 2^3 = 0b1000
  *    mask = 8 - 1 = 7 = 0b0111
@@ -47,7 +56,7 @@ inline constexpr std::size_t CACHE_LINE_SIZE = 64;
  *  ------
  *    0101 := 5 ( and 13 % 8 is also = 5)
  *
- * ---------------------------
+ * *---------------------------*
  */
 
 namespace check {

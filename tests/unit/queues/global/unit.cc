@@ -4,7 +4,7 @@
 
 // -------------------- Test prerequisites --------------------
 
-struct TestTask : vvv::IntrusiveListNode<TestTask> {
+struct TestTask : IntrusiveListNode {
     int value;
 
     explicit TestTask(int v) : value(v) {}
@@ -37,8 +37,9 @@ TEST_F(GlobalQueueTest, FIFO) {
 }
 
 TEST_F(GlobalQueueTest, PushEmptyBatch) {
-    vvv::IntrusiveList<TestTask> empty_batch;
+    IntrusiveList<TestTask> empty_batch;
     queue.push_batch(std::move(empty_batch));
+
     EXPECT_FALSE(queue.try_pop().has_value());
 }
 
@@ -51,7 +52,7 @@ TEST_F(GlobalQueueTest, PopBatchMoreThanAvailable) {
     ASSERT_TRUE(res.has_value());
 
     int size = 0;
-    while (res->TryPopFront()) {
+    while (res->try_pop_front()) {
         size++;
     }
 
@@ -72,11 +73,11 @@ TEST_F(GlobalQueueTest, PopBatchZero) {
 }
 
 TEST_F(GlobalQueueTest, BatchOperations) {
-    vvv::IntrusiveList<TestTask> batch;
+    IntrusiveList<TestTask> batch;
     TestTask tasks[5] = {TestTask(1), TestTask(2), TestTask(3), TestTask(4), TestTask(5)};
 
     for (auto& t : tasks) {
-        batch.PushBack(&t);
+        batch.push_back(t);
     }
 
     queue.push_batch(std::move(batch));
@@ -87,8 +88,8 @@ TEST_F(GlobalQueueTest, BatchOperations) {
     ASSERT_TRUE(popped_batch.has_value());
 
     int count = 0;
-    while (popped_batch->NonEmpty()) {
-        auto* t = popped_batch->PopFrontNonEmpty();
+    while (not popped_batch->empty()) {
+        auto* t = popped_batch->try_pop_front();
         ++count;
         EXPECT_EQ(t->value, count);
     }
