@@ -33,7 +33,7 @@ class StealHandle {
     /* !! TODO !! */ Loot<TaskType> steal_batch_and_pop(WorkStealingQueue<TaskType, Capacity>& dest) noexcept;
 
     [[nodiscard]]
-    bool is_empty() const noexcept;
+    bool empty() const noexcept;
 
     StealHandle(const StealHandle& other) = default;
     StealHandle(StealHandle&&) = default;

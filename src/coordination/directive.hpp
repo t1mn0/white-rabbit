@@ -41,13 +41,13 @@ class Directive {
     static Directive Terminate();
 
   public:  // member functions:
-    bool is_should_steal() const noexcept;
+    bool should_steal() const noexcept;
 
-    bool is_should_retry() const noexcept;
+    bool should_retry() const noexcept;
 
-    bool is_should_terminate() const noexcept;
+    bool should_terminate() const noexcept;
 
-    bool is_should_park() const noexcept;
+    bool should_park() const noexcept;
 
     [[nodiscard]] Permit unwrap_permit() &&;
 };
@@ -70,24 +70,24 @@ inline Directive Directive::Terminate() {
     return Directive(Action::Terminate);
 }
 
-inline bool Directive::is_should_steal() const noexcept {
+inline bool Directive::should_steal() const noexcept {
     return action_ == Action::Steal;
 }
 
-inline bool Directive::is_should_retry() const noexcept {
+inline bool Directive::should_retry() const noexcept {
     return action_ == Action::Retry;
 }
 
-inline bool Directive::is_should_terminate() const noexcept {
+inline bool Directive::should_terminate() const noexcept {
     return action_ == Action::Terminate;
 }
 
-inline bool Directive::is_should_park() const noexcept {
+inline bool Directive::should_park() const noexcept {
     return action_ == Action::Park;
 }
 
 inline Directive::Permit Directive::unwrap_permit() && {
-    assert(is_should_steal() && permit_.has_value());
+    assert(should_steal() && permit_.has_value());
     return std::move(*permit_);
 }
 

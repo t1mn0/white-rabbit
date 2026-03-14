@@ -5,10 +5,10 @@
 #include "../queues/local/ws_queue.hpp"
 
 #include <cstddef>
+#include <ntrusive/ntrusive.hpp>
 #include <optional>
 #include <random>
 #include <vector>
-#include <vvv/list.hpp>
 
 namespace wr {
 
@@ -70,7 +70,7 @@ class Worker {
 
     void push_task(TaskType* /*, SchedHint */) noexcept;
 
-    std::optional<vvv::IntrusiveList<TaskType>> yawn_tasks(size_t requested_size);
+    std::optional<IntrusiveList<TaskType>> yawn_tasks(size_t requested_size);
     WsExecutor<TaskType, Config>& host() const;
 
   private:  // member-functions:

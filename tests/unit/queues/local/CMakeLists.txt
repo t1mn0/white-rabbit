@@ -10,13 +10,13 @@ ADD_EXECUTABLE(local_queue_tests
 
 TARGET_LINK_LIBRARIES(local_queue_tests
   PRIVATE
-  white_rabbit
-  GTest::gtest_main
+    white_rabbit
+    GTest::gtest_main
 )
 
 TARGET_COMPILE_FEATURES(local_queue_tests
   PRIVATE
-  cxx_std_20
+    cxx_std_20
 )
 
 INCLUDE(GoogleTest)
