@@ -9,7 +9,6 @@ template <task::Task TaskType, size_t Capacity>
     requires utils::constants::check::IsPowerOfTwo<Capacity>
 class WorkStealingQueue;
 
-
 template <task::Task TaskType, size_t Capacity>
 class StealHandle;
 

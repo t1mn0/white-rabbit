@@ -1,27 +1,27 @@
 #pragma once
 
+#include <atomic>
+#include <memory>
+
 #include "../tasks/concept.hpp"
 #include "../worker/worker.hpp"
 #include "config/concept.hpp"
 #include "config/config.hpp"
 
-#include <atomic>
-#include <memory>
-
 namespace wr {
 
 template <task::Task TaskType, config::ExecutionConfig Config = config::DefaultConfig>
 class WsExecutor {
-  public:
-    using WorkerType = worker::Worker<TaskType, Config>;
+  public:  // nested types:
+    using WorkerType = Worker<TaskType, Config>;
 
-  private:
+  private:  // data members:
     std::vector<std::unique_ptr<WorkerType>> workers_;
     std::atomic<int> active_stealers_{0};
     size_t max_stealers_;
     size_t num_workers_;
 
-  public:
+  public:  // member functions:
     WsExecutor(size_t workers_count);
     ~WsExecutor();
 

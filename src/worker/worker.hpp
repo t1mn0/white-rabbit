@@ -1,11 +1,14 @@
 #pragma once
 
-#include "../exec/executor.hpp"
+#include "../exec/config/concept.hpp"
+#include "../exec/config/config.hpp"
 #include "../queues/local/ws_queue.hpp"
+
 #include <cstddef>
+#include <ntrusive/ntrusive.hpp>
 #include <optional>
+#include <random>
 #include <vector>
-#include <vvv/list.hpp>
 
 namespace wr {
 
@@ -15,48 +18,17 @@ class WsExecutor;
 
 template <task::Task TaskType, config::ExecutionConfig Config = config::DefaultConfig>
 class Worker {
-  public:  // aliases
+  public:  // nested types:
     static constexpr size_t kCapacity = Config::kLocalQueueCapacity;
     static constexpr size_t kMaxLifoStreak = Config::kMaxLifoStreak;
     static constexpr size_t kFairnessPeriod = Config::kFairnessPeriod;
 
+    using TaskPtr = TaskType*;
     using LocalQueue = queues::WorkStealingQueue<TaskType, kCapacity>;
-    using Handle = queues::StealHandle<TaskType, kCapacity>;
+    using StealHandle = queues::StealHandle<TaskType, kCapacity>;
     using LootType = queues::Loot<TaskType>;
 
-  public:  // member-functions:
-    Worker(WsExecutor<TaskType, Config>& host, size_t worker_index);
-
-    void start();  // auto-join;
-    void wake();   // if parked;
-
-    // Worker is producer for its local queue;
-    void push_task(TaskType* /*, SchedHint */);
-
-    std::optional<vvv::IntrusiveList<TaskType>> yawn_tasks(size_t requested_size);
-    WsExecutor<TaskType, Config>& host() const;
-
-  private:  // member-functions:
-    void push_to_lifo_slot();
-    void push_to_local_queue();
-    void offload_to_global_queue();
-
-    std::optional<TaskType*> try_pick_task();
-    std::optional<TaskType*> try_pick_task_from_lifo_slot();
-    std::optional<TaskType*> try_pick_task_from_local_queue();
-    std::optional<TaskType*> try_pick_task_from_global_queue();
-
-    // Using the `optional` (monadic) features we can write code like flow:
-    // pick_task() = try_pick_task().or_else(/*parking*/);
-    // try_pick_task() = try_pick_task_from_lifo_slot()
-    //     .or_else(try_pick_task_from_local_queue())
-    //     .or_else(try_pick_task_from_global_queue())
-    // etc;
-    TaskType* pick_task();
-
-    void work();  // run-loop;
-
-  private:  // fields:
+  private:  // data members:
     // We introduce a ownership relationship: the executor owns the Worker objects,
     // the Worker belongs to the executor object.
     // This attitude is caused by the fact that the Worker is inextricably linked to
@@ -80,12 +52,38 @@ class Worker {
     //
     uint64_t tick_ = 0;
 
-    std::atomic<TaskType*> warm_slot_{nullptr}; /* LIFO */
-    size_t lifo_streak_{0};
+    std::atomic<TaskType*> lifo_slot_ = nullptr;
+    size_t lifo_streak_ = 0;
 
-    queues::WorkStealingQueue<TaskType*, kCapacity> local_queue_;
+    LocalQueue local_queue_;
 
-    std::vector<Handle> steal_tickets_;
+    std::mt19937_64 rng_;
+    std::vector<StealHandle> victims_;
+
+    std::atomic<bool> stop_flag_ = false;
+
+  public:  // member-functions:
+    Worker(WsExecutor<TaskType, Config>& host, size_t worker_index);
+
+    void start();  // auto-join;
+    void stop();   // auto-join;
+
+    void push_task(TaskType* /*, SchedHint */) noexcept;
+
+    std::optional<IntrusiveList<TaskType>> yawn_tasks(size_t requested_size);
+    WsExecutor<TaskType, Config>& host() const;
+
+  private:  // member-functions:
+    [[nodiscard]] TaskPtr pick_task() noexcept;
+
+    std::optional<TaskPtr> try_pick_fast() noexcept;
+    std::optional<TaskPtr> try_steal_any() noexcept;
+
+    std::optional<TaskPtr> try_pop_lifo() noexcept;
+    std::optional<TaskPtr> try_pop_local() noexcept;
+    std::optional<TaskPtr> try_pop_global() noexcept;
+
+    void work();  // run-loop;
 };
 
 };  // namespace wr

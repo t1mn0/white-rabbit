@@ -1,11 +1,12 @@
 #pragma once
 
-#include "../../tasks/concept.hpp"
-#include "utils/constants.hpp"
 #include <array>
 #include <atomic>
 #include <cstddef>
 #include <cstdint>
+
+#include "../../tasks/concept.hpp"
+#include "utils/constants.hpp"
 
 namespace wr::queues {
 
@@ -65,12 +66,17 @@ namespace wr::queues {
 template <task::Task TaskType, size_t Capacity>
     requires utils::constants::check::IsPowerOfTwo<Capacity>
 class RingBuffer {
-  public:
+  public:  // nested types:
     using ValueType = TaskType*;
 
+  public:  // static data member:
     static constexpr size_t kCapacity = Capacity;
     static constexpr size_t kMask = Capacity - 1;
 
+  private:  // data members:
+    std::array<std::atomic<ValueType>, Capacity> slots_{};
+
+  public:  // member functions:
     RingBuffer() = default;
 
     /* Non-copiable : slots contains atomics, copying would break inveriants of atomicity */
@@ -104,9 +110,6 @@ class RingBuffer {
     static constexpr size_t to_local_index(uint64_t global) noexcept;
 
     constexpr size_t capacity() const noexcept;
-
-  private:
-    std::array<std::atomic<ValueType>, Capacity> slots_{};
 };
 
 /* ---------------------------------- IMPLEMENTATION ---------------------------------- */
@@ -145,6 +148,5 @@ constexpr size_t RingBuffer<TaskType, Capacity>::capacity() const noexcept {
     return Capacity;
     ///
 }
-
 
 };  // namespace wr::queues

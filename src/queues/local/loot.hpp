@@ -1,9 +1,10 @@
 #pragma once
 
-#include "../../tasks/concept.hpp"
 #include <cassert>
 #include <cstdint>
 #include <optional>
+
+#include "../../tasks/concept.hpp"
 
 namespace wr::queues {
 
@@ -15,18 +16,18 @@ enum class State : uint8_t {
 
 template <task::Task TaskType>
 class Loot {
-  private:  // member-functions:
-    Loot(State, TaskType*) noexcept;
-    explicit Loot(State state) noexcept;
+  private:  // data members:
+    State state_{State::Empty};
+    TaskType* reward_{nullptr};
 
-  public:  // member-functions:
+  public:  // member functions:
     [[nodiscard]] auto static Success(TaskType* task) noexcept -> Loot;
     [[nodiscard]] auto static Empty() noexcept -> Loot;
     [[nodiscard]] auto static Retry() noexcept -> Loot;
 
-    bool is_success() const noexcept;
-    bool is_empty() const noexcept;
-    bool is_retry() const noexcept;
+    bool success() const noexcept;
+    bool empty() const noexcept;
+    bool retry() const noexcept;
 
     [[nodiscard]] State get_state() const noexcept;
 
@@ -40,9 +41,9 @@ class Loot {
     /* @brief Safely extracts the task as optional */
     std::optional<TaskType*> as_optional() && noexcept;
 
-  private:  // fields:
-    State state_{State::Empty};
-    TaskType* reward_{nullptr};
+  private:  // member functions:
+    Loot(State, TaskType*) noexcept;
+    explicit Loot(State state) noexcept;
 };
 
 /* ---------------------------------- IMPLEMENTATION ---------------------------------- */
@@ -75,21 +76,21 @@ auto Loot<TaskType>::Retry() noexcept -> Loot {
 }
 
 template <task::Task TaskType>
-bool Loot<TaskType>::is_success() const noexcept {
+bool Loot<TaskType>::success() const noexcept {
     ///
     return state_ == State::Success;
     ///
 }
 
 template <task::Task TaskType>
-bool Loot<TaskType>::is_empty() const noexcept {
+bool Loot<TaskType>::empty() const noexcept {
     ///
     return state_ == State::Empty;
     ///
 }
 
 template <task::Task TaskType>
-bool Loot<TaskType>::is_retry() const noexcept {
+bool Loot<TaskType>::retry() const noexcept {
     ///
     return state_ == State::Retry;
     ///
@@ -104,14 +105,14 @@ auto Loot<TaskType>::get_state() const noexcept -> State {
 
 template <task::Task TaskType>
 TaskType* Loot<TaskType>::unwrap() && {
-    assert(is_success());
+    assert(success());
     return std::move(reward_);
 }
 
 template <task::Task TaskType>
 template <typename A>
 TaskType* Loot<TaskType>::unwrap_or(A&& some_action) && {
-    if (is_success()) {
+    if (success()) {
         return reward_;
     } else {
         some_action();
@@ -120,8 +121,7 @@ TaskType* Loot<TaskType>::unwrap_or(A&& some_action) && {
 
 template <task::Task TaskType>
 std::optional<TaskType*> Loot<TaskType>::as_optional() && noexcept {
-    return is_success() ? std::optional{reward_} : std::nullopt;
+    return success() ? std::optional{reward_} : std::nullopt;
 }
-
 
 };  // namespace wr::queues
