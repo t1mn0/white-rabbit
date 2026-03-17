@@ -5,7 +5,7 @@ It also gives a `Park` directive to a Worker which will not be able to pick up t
 
 ### Work cycle around Coordinator step by step:
 
-![work cycle](../../docs/media/coordinator_work_cycle.png)
+![work cycle](https://github.com/t1mn0/white-rabbit-media/blob/main/coordinator_work_cycle.png)
 
 `Worker` --> `Coordinator` : requests directives;
 

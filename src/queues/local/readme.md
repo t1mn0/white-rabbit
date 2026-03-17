@@ -16,4 +16,4 @@ Owner treats it as a Stack (_LIFO_): pushes and pops from the `bottom`. Thieves 
 The physical storage is a fixed-size `std::array<std::atomic<Task*>, Capacity>`. To navigate it, we use two concepts of indices: _Global_ and _Local_. To map an infinite global index to a physical array slot, we require `Capacity` to be a power of two. This allows us to replace the expensive modulo operator (%) with a lightning-fast bitwise AND (&): `Local_Index = Global_Index & (Capacity - 1)`. 
 
 ## Concurrency Model
-![localq](../../../docs/media/work_stealing_queue.png)
+![localq](https://github.com/t1mn0/white-rabbit-media/blob/main/work_stealing_queue.png?raw=true)

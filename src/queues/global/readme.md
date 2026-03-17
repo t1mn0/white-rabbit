@@ -1,7 +1,7 @@
 ## GlobalQueue
 `GlobalQueue` serves as a fallback source of task for Workers when their _local queues_ are empty. It is considered the slowest path for Worker, until it starts stealing tasks. Workers always prefer to use local queues without locks (fastest path), accessing the `GlobalQueue` only periodically (for fairness, for example, every [61](../../worker/worker.hpp) clock cycles) or when their local fires are completely exhausted.
 
-![globalq](../../../docs/media/global_queue.png)
+![globalq](https://github.com/t1mn0/white-rabbit-media/blob/main/global_queue.png?raw=true)
 
 `GlobalQueue` characteristics:
 
@@ -14,4 +14,4 @@
 
 ### Intrusiveness
 To manipulate `Task` objects in the context of queues and other possible intrusive data structures, simply need to rearrange the embedded pointers to the `Node`, which frees you from memory allocations. To capture this part of the design in the code Tasks implement the `Task` [concept](../../tasks/concept.hpp), meaning its derived from `vvv::IntrusiveListNode`.
-![intrusiveness](../../../docs/media/intrusiveness.png)
+![intrusiveness](https://github.com/t1mn0/white-rabbit-media/blob/main/intrusiveness.png?raw=true)
