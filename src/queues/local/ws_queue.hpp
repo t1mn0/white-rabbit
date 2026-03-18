@@ -171,7 +171,7 @@ auto WorkStealingQueue<TaskT, Capacity>::offload_half() noexcept -> std::optiona
     /* [top; top + count) */
     for (auto i = top; i < top + offload_count; ++i) {
         auto task = state_.load_task(i);
-        batch.PushBack(task);
+        batch.push_back(*task);
     }
 
     return batch;

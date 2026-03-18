@@ -4,17 +4,11 @@
 #include <random>
 #include <vector>
 
-#include <vvv/list.hpp>
+#include <ntrusive/list.hpp>
 
 #include "../exec/config/concept.hpp"
 #include "../exec/config/config.hpp"
 #include "../queues/local/ws_queue.hpp"
-
-#include <cstddef>
-#include <ntrusive/ntrusive.hpp>
-#include <optional>
-#include <random>
-#include <vector>
 
 namespace wr {
 
@@ -218,7 +212,7 @@ auto Worker<TaskT, Config>::try_steal_any() noexcept -> TaskPtr {
         size_t target = (start + i) % victims_.size();
         auto loot = victims_[target].steal();
 
-        if (loot.is_success()) {
+        if (loot.success()) {
             return std::move(loot).unwrap();
         }
     }

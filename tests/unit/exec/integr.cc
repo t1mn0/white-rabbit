@@ -3,9 +3,10 @@
 #include <iostream>
 #include <vector>
 
-#include "../src/exec/executor.hpp"
+#include "../../../src/exec/executor.hpp"
+#include <ntrusive/list.hpp>
 
-struct ComputeTask : public vvv::IntrusiveListNode<ComputeTask> {
+struct ComputeTask : public IntrusiveListNode {
     std::atomic<size_t>& counter;
 
     explicit ComputeTask(std::atomic<size_t>& external_counter)
