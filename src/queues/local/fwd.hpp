@@ -3,6 +3,8 @@
 #include "../../tasks/concept.hpp"
 #include "utils/constants.hpp"
 
+#include <cstddef>
+
 namespace wr::queues {
 
 template <task::Task TaskType, size_t Capacity>

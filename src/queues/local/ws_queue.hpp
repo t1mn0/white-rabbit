@@ -2,8 +2,8 @@
 
 #include <atomic>
 #include <cstddef>
+#include <ntrusive/intrusive.hpp>
 #include <optional>
-#include <vvv/list.hpp>
 
 #include "../../tasks/concept.hpp"
 #include "shared_state.hpp"
@@ -20,7 +20,7 @@ template <task::Task TaskT, size_t Capacity>
 class WorkStealingQueue {
   public:  // nested types:
     using TaskPtr = TaskT*;
-    using Batch = vvv::IntrusiveList<TaskT>;
+    using Batch = IntrusiveList<TaskT>;
 
   private:  // data members:
     SharedState<TaskT, Capacity> state_;
@@ -151,7 +151,7 @@ template <task::Task TaskT, size_t Capacity>
     requires utils::constants::check::IsPowerOfTwo<Capacity>
 auto WorkStealingQueue<TaskT, Capacity>::offload_half() noexcept -> std::optional<Batch> {
 
-    vvv::IntrusiveList<TaskT> batch;
+    IntrusiveList<TaskT> batch;
 
     auto bt = state_.load_bottom();
     auto top = state_.load_top();

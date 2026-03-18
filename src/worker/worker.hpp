@@ -10,6 +10,12 @@
 #include "../exec/config/config.hpp"
 #include "../queues/local/ws_queue.hpp"
 
+#include <cstddef>
+#include <ntrusive/ntrusive.hpp>
+#include <optional>
+#include <random>
+#include <vector>
+
 namespace wr {
 
 /* forward-declaration */
@@ -167,14 +173,14 @@ auto Worker<TaskT, Config>::pick_task() noexcept -> TaskPtr {
 
         auto directive = host_.coordinator().ask_to_steal();
 
-        if (directive.is_should_terminate()) {
+        if (directive.should_terminate()) {
             return nullptr;
-        } else if (directive.is_should_steal()) {
+        } else if (directive.should_steal()) {
             if (TaskPtr stolen_task = try_steal_any()) {
                 return stolen_task;
             }
             continue;
-        } else if (directive.is_should_retry()) {
+        } else if (directive.should_retry()) {
             continue;
         }
 

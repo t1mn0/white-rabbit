@@ -11,13 +11,18 @@ namespace wr::utils {
 
 namespace constants {
 
-#if defined(__cpp_lib_hardware_interference_size) && !defined(__APPLE__)
+#if defined(__cpp_lib_hardware_interference_size) && defined(__GNUC__) && !defined(__clang__)
 #    pragma GCC diagnostic push
 #    pragma GCC diagnostic ignored "-Winterference-size"
+
 inline constexpr std::size_t CACHE_LINE_SIZE = std::hardware_destructive_interference_size;
+
 #    pragma GCC diagnostic pop
+
 #else
-inline constexpr std::size_t CACHE_LINE_SIZE = 64;
+
+inline constexpr std::size_t CACHE_LINE_SIZE = (sizeof(std::size_t) == 8) ? 64 : 32;
+
 #endif
 
 /* ------------------------------------------------------------------- */
@@ -38,7 +43,7 @@ inline constexpr std::size_t CACHE_LINE_SIZE = 64;
  *  => The mask := [capacity - 1] cuts off all bits above the capacity
  *  and leaving only the remainder. That's exactly what modulo does.
  *
- *  ---------------------------
+ *  *---------------------------*
  *    EXAMPLE :
  *    Capacity = 8 = 2^3 = 0b1000
  *    mask = 8 - 1 = 7 = 0b0111
@@ -51,7 +56,7 @@ inline constexpr std::size_t CACHE_LINE_SIZE = 64;
  *  ------
  *    0101 := 5 ( and 13 % 8 is also = 5)
  *
- * ---------------------------
+ * *---------------------------*
  */
 
 namespace check {

@@ -27,13 +27,13 @@ class StealHandle {
     explicit StealHandle(SharedState<TaskType, Capacity>* state) : state_(state) {}
 
     [[nodiscard]]
-    /* !! TODO !! */ Loot<TaskType> steal() noexcept;
+    Loot<TaskType> steal() noexcept;
 
     [[nodiscard]]
-    /* !! TODO !! */ Loot<TaskType> steal_batch_and_pop(WorkStealingQueue<TaskType, Capacity>& dest) noexcept;
+    Loot<TaskType> steal_batch_and_pop(WorkStealingQueue<TaskType, Capacity>& dest) noexcept;
 
     [[nodiscard]]
-    bool is_empty() const noexcept;
+    bool empty() const noexcept;
 
     StealHandle(const StealHandle& other) = default;
     StealHandle(StealHandle&&) = default;
@@ -65,7 +65,7 @@ Loot<TaskType> StealHandle<TaskType, Capacity>::steal() noexcept {
 }
 
 template <task::Task TaskType, size_t Capacity>
-bool StealHandle<TaskType, Capacity>::is_empty() const noexcept {
+bool StealHandle<TaskType, Capacity>::empty() const noexcept {
     return state_->top_.load(std::memory_order_relaxed) >=
            state_->bottom_.load(std::memory_order_relaxed);
 }

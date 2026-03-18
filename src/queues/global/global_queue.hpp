@@ -1,9 +1,10 @@
 #pragma once
 
+#include <algorithm>
 #include <mutex>
 #include <optional>
 
-#include <vvv/list.hpp>
+#include <ntrusive/intrusive.hpp>
 
 #include "../../tasks/concept.hpp"
 
@@ -16,13 +17,13 @@ template <task::Task TaskT>
 class GlobalQueue {
   public:  // nested types:
     using TaskPtr = TaskT*;
-    using Batch = vvv::IntrusiveList<TaskT>;
+    using Batch = IntrusiveList<TaskT>;
 
   private:  // data members:
-    vvv::IntrusiveList<TaskT> buffer_;
+    IntrusiveList<TaskT> buffer_;
 
     // Point of contention:
-    mutable std::mutex mutex_;  // `mutable` since it is used in the constant method `.is_empty()`
+    mutable std::mutex mutex_;  // `mutable` since it is used in the constant method `.empty()`
 
   public:  // member functions:
     GlobalQueue() = default;
@@ -38,24 +39,24 @@ class GlobalQueue {
     void push(TaskPtr task) noexcept;
 
     // Docks a batch of tasks to GlobalQueue.
-    // O(1) complexity thanks to vvv::IntrusiveList::Append
+    // O(1) complexity thanks to IntrusiveList::splice
     void push_batch(Batch&& batch) noexcept;
 
     // -------------------- Consumer API --------------------
 
     // Tries to extract one task. Returns std::nullopt if empty
-    std::optional<TaskPtr> try_pop() noexcept;
+    auto try_pop() noexcept -> std::optional<TaskPtr>;
 
     // Tries to extract a batch of tasks up to max_count.
     // O(max_count) complexity
-    std::optional<Batch> try_pop_batch(size_t max_count) noexcept;
+    auto try_pop_batch(size_t max_count) noexcept -> std::optional<Batch>;
 
   private:  // member functions:
-    // `.is_empty()` needed not for the internal logic of shifting tasks, but for
+    // `empty()` needed not for the internal logic of shifting tasks, but for
     // external monitoring of the system status and for the logic of scheduler's shutdown:
-    bool is_empty() const noexcept;
+    auto empty() const noexcept -> bool;
 
-  private:  // TODO: friends declaration for .is_empty() users:
+  private:  // TODO: friends declaration for .empty() users:
             // . . .
 };
 
@@ -64,63 +65,58 @@ class GlobalQueue {
 template <task::Task TaskT>
 void GlobalQueue<TaskT>::push(TaskPtr task) noexcept {
     std::lock_guard lock(mutex_);
-
-    /* An argument of the `IntrusiveListNode*` type is expected in
-     * `IntrusiveList<TaskT>.PushBack(Node* node)`; But since `TaskT` is a special case of
-     * `IntrusiveListNode`, this operation is acceptable: */
-    buffer_.PushBack(task);  // implicit upcast: TaskT* -> IntrusiveListNode*;
+    buffer_.push_back(*task);
 }
 
 template <task::Task TaskT>
-std::optional<typename GlobalQueue<TaskT>::TaskPtr> GlobalQueue<TaskT>::try_pop() noexcept {
+auto GlobalQueue<TaskT>::try_pop() noexcept -> std::optional<typename GlobalQueue<TaskT>::TaskPtr> {
     std::lock_guard lock(mutex_);
 
-    if (buffer_.IsEmpty()) {
+    if (buffer_.empty()) {
         return std::nullopt;
     }
 
-    return buffer_.PopFrontNonEmpty();  // implicit downcast: IntrusiveListNode* -> TaskT*;;
+    return buffer_.try_pop_front();
 }
 
 template <task::Task TaskT>
 void GlobalQueue<TaskT>::push_batch(Batch&& batch) noexcept {
-    if (batch.IsEmpty()) {
+    if (batch.empty()) {
         return;
     }
 
     {
         std::lock_guard lock(mutex_);
-        buffer_.Append(batch);  // Complexity: O(1)
+        buffer_.splice(buffer_.end(), batch);  // O(1)
     }
 }
 
 template <task::Task TaskT>
-auto GlobalQueue<TaskT>::try_pop_batch(size_t max_count) noexcept
-    -> std::optional<typename GlobalQueue<TaskT>::Batch> {
-
+std::optional<typename GlobalQueue<TaskT>::Batch>
+GlobalQueue<TaskT>::try_pop_batch(size_t max_count) noexcept {
     if (max_count == 0) {
         return std::nullopt;
     }
 
     std::lock_guard lock(mutex_);
-    if (buffer_.IsEmpty()) {
+    if (buffer_.empty()) {
         return std::nullopt;
     }
 
     Batch result;
-    size_t actual_count = 0;
-    while (!buffer_.IsEmpty() && actual_count < max_count) {
-        result.PushBack(buffer_.PopFrontNonEmpty());
-        ++actual_count;
+    size_t actual_count = buffer_.extract_front(result, max_count);
+
+    if (actual_count == 0) {
+        return std::nullopt;
     }
 
-    return result;
+    return std::make_optional(std::move(result));
 }
 
 template <task::Task TaskT>
-bool GlobalQueue<TaskT>::is_empty() const noexcept {
+bool GlobalQueue<TaskT>::empty() const noexcept {
     std::lock_guard lock(mutex_);
-    return buffer_.IsEmpty();
+    return buffer_.empty();
 }
 
 }  // namespace wr::queues

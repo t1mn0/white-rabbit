@@ -8,6 +8,5 @@ TARGET_INCLUDE_DIRECTORIES(white_rabbit
 
 TARGET_LINK_LIBRARIES(white_rabbit
     INTERFACE
-    twist
-    third_party_vvv
+    third_party_ntrusive
 )
