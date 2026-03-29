@@ -11,9 +11,9 @@
 
 namespace wr::coord {
 
-/* Throttler is a component that stores information about the number of workers in the active steal
- * phase and the number of workers which are parked. It works on the principle of TaggedSemaphore,
- * limiting the number of thieves-workers in the WS Scheduler: */
+/* Throttler is a component that stores information about the number of workers in the active
+ * steal phase and the number of workers which are parked. It works on the principle of
+ * TaggedSemaphore, limiting the number of thieves-workers in the WS Scheduler: */
 class Throttler /* Semaphore */ {
   public:  // nested types:
     class StealPermit /* is a linear type and RAII-wrapper for semaphore counter unit */ {
@@ -35,7 +35,8 @@ class Throttler /* Semaphore */ {
         void release() noexcept;
 
       private:  // member functions:
-        explicit StealPermit(Throttler* host) : host_(host) {}
+        explicit StealPermit(Throttler* host)
+            : host_(host) {}
     };
 
   private:  // data members:
@@ -48,9 +49,11 @@ class Throttler /* Semaphore */ {
     std::atomic<bool> work_hint_ = false;
 
   public:  // member functions:
-    explicit Throttler(size_t max_searchers) : max_searchers_count_(max_searchers) {}
+    explicit Throttler(size_t max_searchers)
+        : max_searchers_count_(max_searchers) {}
 
-    [[nodiscard]] std::optional<StealPermit> try_acquire_permit() noexcept;
+    [[nodiscard]]
+    std::optional<StealPermit> try_acquire_permit() noexcept;
 
     template <WakeCondition Predicate>
     void park(Predicate&& stop_waiting) noexcept;
@@ -67,7 +70,7 @@ class Throttler /* Semaphore */ {
     void on_permit_released() noexcept;
 };
 
-/* ---------------------------------- IMPLEMENTATION ---------------------------------- */
+/* -------------------------------------------------------------------- */
 
 inline Throttler::StealPermit::~StealPermit() {
     ///
@@ -85,12 +88,11 @@ inline void Throttler::StealPermit::release() noexcept {
     }
 }
 
-inline std::optional<Throttler::StealPermit> Throttler::try_acquire_permit() noexcept {
+inline auto Throttler::try_acquire_permit() noexcept -> std::optional<Throttler::StealPermit> {
     // trying to give `SearchPermit` via CAS:
     size_t current_searchers_count_ = searchers_count_.load();
     while (current_searchers_count_ < max_searchers_count_) {
-        if (searchers_count_.compare_exchange_weak(current_searchers_count_,
-                                                   current_searchers_count_ + 1)) {
+        if (searchers_count_.compare_exchange_weak(current_searchers_count_, current_searchers_count_ + 1)) {
             return Throttler::StealPermit(this);
         }
     }
@@ -121,9 +123,9 @@ void Throttler::park(Predicate&& stop_waiting) noexcept {
 }
 
 inline void Throttler::notify_work_available() noexcept {
-    /* If some Worker is in `Searching` state (`searchers_count_` > 0), we not wake the sleepers.
-    Just set the `work_maybe_available_ = true` flag. `Searching` worker (which currently is in
-    steal mode) is guaranteed to see this hot task. */
+    /* If some Worker is in `Searching` state (`searchers_count_` > 0), we not wake the
+    sleepers. Just set the `work_maybe_available_ = true` flag. `Searching` worker (which
+    currently is in steal mode) is guaranteed to see this hot task. */
     if (searchers_count_.load() > 0) {
         return;
     }
@@ -144,15 +146,21 @@ inline void Throttler::notify_all_workers() noexcept {
 }
 
 inline size_t Throttler::searchers_count() const noexcept {
+    ///
     return searchers_count_.load();
+    ///
 }
 
 inline size_t Throttler::parked_count() const noexcept {
+    ///
     return parked_count_.load();
+    ///
 }
 
 inline void Throttler::on_permit_released() noexcept {
+    ///
     searchers_count_.fetch_sub(1);  // just guarantee to no leaks in the semaphore
+    ///
 }
 
 }  // namespace wr::coord

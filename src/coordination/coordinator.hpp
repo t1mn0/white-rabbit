@@ -19,69 +19,58 @@ class Coordinator {
     std::atomic<bool> work_maybe_available_ = false;
 
   public:  // member functions:
-    explicit Coordinator(size_t total_workers);
+    explicit Coordinator(size_t total_workers)
+        : semaphore_(total_workers > 1 ? total_workers / 2 : 1) {}
 
     // main method for requesting instructions by Worker
-    [[nodiscard]] Directive ask_to_steal() noexcept;
+    [[nodiscard]] auto ask_to_steal() noexcept -> Directive {
+        if (shutdown_requested_.load()) {
+            return Directive::Terminate();
+        }
 
-    void park_worker() noexcept;
+        /* permission to steal */
+        auto permittion = semaphore_.try_acquire_permit();
 
-    void notify_worker() noexcept;
+        if (permittion.has_value()) {
+            return Directive::Steal(std::move(permittion.value()));
+        }
 
-    void shutdown() noexcept;
+        /* two-phased parking... */
+        if (work_maybe_available_.exchange(false)) {
+            return Directive::Retry();
+        }
 
-    bool should_shutdown() const noexcept;
-};
-
-/* ---------------------------------- IMPLEMENTATION ---------------------------------- */
-
-inline Coordinator::Coordinator(size_t total_workers)
-    : semaphore_(total_workers > 1 ? total_workers / 2 : 1) {}
-
-inline auto Coordinator::ask_to_steal() noexcept -> Directive {
-    if (shutdown_requested_.load()) {
-        return Directive::Terminate();
+        return Directive::Park();
     }
 
-    /* permission to steal */
-    auto permittion = semaphore_.try_acquire_permit();
-
-    if (permittion.has_value()) {
-        return Directive::Steal(std::move(permittion.value()));
+    void park_worker() noexcept {
+        ///
+        semaphore_.park([this] { return shutdown_requested_.load(); });
+        ///
     }
 
-    /* two-phased parking... */
-    if (work_maybe_available_.exchange(false)) {
-        return Directive::Retry();
+    /*
+     * @brief notify workers that work is awailable
+     */
+    void notify_worker() noexcept {
+        if (semaphore_.searchers_count() > 0) {
+            work_maybe_available_.store(true);
+            return;
+        }
+
+        if (semaphore_.parked_count() > 0) {
+            semaphore_.notify_work_available();
+        }
     }
 
-    return Directive::Park();
-}
+    void shutdown() noexcept {
+        shutdown_requested_.store(true);
+        semaphore_.notify_all_workers();
+    }
 
-inline void Coordinator::park_worker() noexcept {
-    semaphore_.park([this] {
+    bool should_shutdown() const noexcept {
         return shutdown_requested_.load();
-    });
-}
-
-inline void Coordinator::notify_worker() noexcept {
-    if (semaphore_.searchers_count() > 0) {
-        work_maybe_available_.store(true);
-        return;
     }
-
-    if (semaphore_.parked_count() > 0) {
-        semaphore_.notify_work_available();
-    }
-}
-
-inline void Coordinator::shutdown() noexcept {
-    shutdown_requested_.store(true);
-    semaphore_.notify_all_workers();
-}
-
-inline bool Coordinator::should_shutdown() const noexcept {
-    return shutdown_requested_.load();
-}
+};
 
 }  // namespace wr::coord

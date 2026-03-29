@@ -24,10 +24,11 @@ class StealHandle {
     friend class WorkStealingQueue<TaskType, Capacity>;
 
   public:  // member functions:
-    explicit StealHandle(SharedState<TaskType, Capacity>* state) : state_(state) {}
+    explicit StealHandle(SharedState<TaskType, Capacity>* state)
+        : state_(state) {}
 
     [[nodiscard]]
-    Loot<TaskType> steal() noexcept;
+    auto steal() noexcept -> Loot<TaskType>;
 
     [[nodiscard]]
     Loot<TaskType> steal_batch_and_pop(WorkStealingQueue<TaskType, Capacity>& dest) noexcept;
@@ -41,10 +42,8 @@ class StealHandle {
     StealHandle& operator=(StealHandle&&) = default;
 };
 
-/* ---------------------------------- IMPLEMENTATION ---------------------------------- */
-
 template <task::Task TaskType, size_t Capacity>
-Loot<TaskType> StealHandle<TaskType, Capacity>::steal() noexcept {
+auto StealHandle<TaskType, Capacity>::steal() noexcept -> Loot<TaskType> {
     uint64_t top = state_->top_.load(std::memory_order_acquire /* ??? */);
 
     std::atomic_thread_fence(std::memory_order_seq_cst /* ??? */);
@@ -64,10 +63,10 @@ Loot<TaskType> StealHandle<TaskType, Capacity>::steal() noexcept {
     return Loot<TaskType>::Success(task);
 }
 
-template <task::Task TaskType, size_t Capacity>
+template <typename TaskType, size_t Capacity>
 bool StealHandle<TaskType, Capacity>::empty() const noexcept {
-    return state_->top_.load(std::memory_order_relaxed) >=
-           state_->bottom_.load(std::memory_order_relaxed);
+    ///
+    return state_->top_.load(std::memory_order_relaxed) >= state_->bottom_.load(std::memory_order_relaxed);
+    ///
 }
-
 };  // namespace wr::queues

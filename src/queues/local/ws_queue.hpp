@@ -42,32 +42,32 @@ class WorkStealingQueue {
     /*
      * @brief Push task at the bottom, returns False if queue is full.
      */
-    bool try_push(TaskPtr item) noexcept;
+    auto try_push(TaskPtr item) noexcept -> bool;
 
     /*  -------------------- Consumer API -------------------- */
     /*
      * @brief Try pop task from the bottom, returns nullopt if empty.
      */
-    std::optional<TaskPtr> try_pop() noexcept;
+    auto try_pop() noexcept -> std::optional<TaskPtr>;
 
 
     /*
-     * @brief Offload half of all tasks from the local queue to the global one if the local queue turns out to be full
-     * when attempting a push operation.
+     * @brief Offload half of all tasks from the local queue to the global one if the local queue turns out to
+     * be full when attempting a push operation.
      *
      * @return List of offloaded tasks.
      */
-    std::optional<Batch> offload_half() noexcept;
+    auto offload_half() noexcept -> std::optional<Batch>;
 
     [[nodiscard]]
-    /* !! TODO !! */ StealHandle<TaskT, Capacity> create_stealer() noexcept;
+    auto create_stealer() noexcept -> StealHandle<TaskT, Capacity>;
 };
 
 /* ---------------------------------- IMPLEMENTATION ---------------------------------- */
 
 template <task::Task TaskT, size_t Capacity>
     requires utils::constants::check::IsPowerOfTwo<Capacity>
-bool WorkStealingQueue<TaskT, Capacity>::try_push(TaskPtr task) noexcept {
+auto WorkStealingQueue<TaskT, Capacity>::try_push(TaskPtr task) noexcept -> bool {
     /*
      * since stealers are never touch the bottom of the buffer
      * => only worker (producer) works with it on a separate cache-line
@@ -94,7 +94,6 @@ bool WorkStealingQueue<TaskT, Capacity>::try_push(TaskPtr task) noexcept {
 template <task::Task TaskT, size_t Capacity>
     requires utils::constants::check::IsPowerOfTwo<Capacity>
 auto WorkStealingQueue<TaskT, Capacity>::try_pop() noexcept -> std::optional<TaskPtr> {
-
     /* relaxedd mo here for the same reason [worker is the only one that has access tthe bottom]  */
     auto bt = state_.load_bottom(std::memory_order::relaxed) - 1;
 
@@ -126,13 +125,11 @@ auto WorkStealingQueue<TaskT, Capacity>::try_pop() noexcept -> std::optional<Tas
      * => race with stealers for the last element
      */
     if (state_.try_increment_top(top)) {
-
         /* we won the race */
         state_.store_bottom(++bt);
         return task;
 
     } else {
-
         /* stealer won... */
         state_.store_bottom(++bt);
         return std::nullopt;
@@ -150,7 +147,6 @@ auto WorkStealingQueue<TaskT, Capacity>::create_stealer() noexcept -> StealHandl
 template <task::Task TaskT, size_t Capacity>
     requires utils::constants::check::IsPowerOfTwo<Capacity>
 auto WorkStealingQueue<TaskT, Capacity>::offload_half() noexcept -> std::optional<Batch> {
-
     IntrusiveList<TaskT> batch;
 
     auto bt = state_.load_bottom();

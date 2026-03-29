@@ -22,7 +22,8 @@ namespace wr::queues {
  *      in order to achieve lock-free design.
  *
  *  >> Since we want to model/achieve the deque behavior and support work-stealing,
- *      this 'desired' data structure should have an ability to act with LIFO behavior for worker and with FIFO behavior for stealers.
+ *      this 'desired' data structure should have an ability to act with LIFO behavior for
+ * worker and with FIFO behavior for stealers.
  *
  *  >> Has quite predictable memory usage.
  *
@@ -39,7 +40,8 @@ namespace wr::queues {
  *  >> Global index represents logical position in infinite stream :
  *  ... | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | ...
  *
- *  Top and Bottom are global indeces and NEVER decrease : they grow monotonically from 0 to infty
+ *  Top and Bottom are global indeces and NEVER decrease : they grow monotonically from 0 to
+ * infty
  *
  *  => Current deque size := [Bottom - Top]
  *
@@ -59,7 +61,8 @@ namespace wr::queues {
  *  @section MAPPING / SLICING
  *
  *  >> That's actually simple : [Local] = [Global] % [Capacity]
- *  But since capacity := 2^N => It reduces to : [Global] & [mask], where mask := [capacity - 1]
+ *  But since capacity := 2^N => It reduces to : [Global] & [mask], where mask := [capacity -
+ * 1]
  *
  * @tparam Capacity must be a power of two.
  */
@@ -92,14 +95,22 @@ class RingBuffer {
      * @param index Global index
      * @return Task pointer stored at that logical position.
      */
-    auto load(uint64_t index, std::memory_order mo = std::memory_order_seq_cst) const noexcept -> ValueType;
+    auto load(uint64_t index, std::memory_order mo = std::memory_order_seq_cst) const noexcept -> ValueType {
+        ///
+        return slots_[to_local_index(index)].load(mo);
+        ///
+    }
 
     /**
      * @brief Store task pointer into slot.
      * @param index Global index.
      * @param value Task ptr to store.
      */
-    void store(uint64_t index, ValueType value, std::memory_order mo = std::memory_order_seq_cst) noexcept;
+    void store(uint64_t index, ValueType value, std::memory_order mo = std::memory_order_seq_cst) noexcept {
+        ///
+        slots_[to_local_index(index)].store(value, mo);
+        ///
+    }
 
     /**
      * @brief Convert global index to local slot index.
@@ -107,42 +118,16 @@ class RingBuffer {
      * @return Index in range [0, Capacity)
      */
     [[nodiscard]]
-    static constexpr size_t to_local_index(uint64_t global) noexcept;
+    static constexpr size_t to_local_index(uint64_t global) noexcept {
+        /* since size_t has system-dependent size, we have to guarantee bit safety */
+        return static_cast<size_t>(global) & kMask;
+    }
 
-    constexpr size_t capacity() const noexcept;
+    constexpr size_t capacity() const noexcept {
+        ///
+        return Capacity;
+        ///
+    }
 };
-
-/* ---------------------------------- IMPLEMENTATION ---------------------------------- */
-
-template <task::Task TaskType, size_t Capacity>
-    requires utils::constants::check::IsPowerOfTwo<Capacity>
-auto RingBuffer<TaskType, Capacity>::load(uint64_t index, std::memory_order mo) const noexcept -> RingBuffer<TaskType, Capacity>::ValueType {
-    ///
-    return slots_[to_local_index(index)].load(mo);
-    ///
-}
-
-template <task::Task TaskType, size_t Capacity>
-    requires utils::constants::check::IsPowerOfTwo<Capacity>
-void RingBuffer<TaskType, Capacity>::store(uint64_t index, ValueType val, std::memory_order mo) noexcept {
-    ///
-    slots_[to_local_index(index)].store(val, mo);
-    ///
-}
-
-template <task::Task TaskType, size_t Capacity>
-    requires utils::constants::check::IsPowerOfTwo<Capacity>
-constexpr size_t RingBuffer<TaskType, Capacity>::to_local_index(uint64_t global) noexcept {
-    /* since size_t has system-dependent size, we have to guarantee bit safety */
-    return static_cast<size_t>(global) & kMask;
-}
-
-template <task::Task TaskType, size_t Capacity>
-    requires utils::constants::check::IsPowerOfTwo<Capacity>
-constexpr size_t RingBuffer<TaskType, Capacity>::capacity() const noexcept {
-    ///
-    return Capacity;
-    ///
-}
 
 };  // namespace wr::queues

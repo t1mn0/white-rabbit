@@ -82,7 +82,9 @@ thread_local Worker<T, C>* current_worker = nullptr;
 
 template <task::Task TaskT, config::ExecutionConfig Config>
 Worker<TaskT, Config>::Worker(WsExecutor<TaskT, Config>& host, size_t index)
-    : host_(host), index_(index), rng_(index) {}
+    : host_(host),
+      index_(index),
+      rng_(index) {}
 
 template <task::Task TaskT, config::ExecutionConfig Config>
 WsExecutor<TaskT, Config>& Worker<TaskT, Config>::host() const noexcept {

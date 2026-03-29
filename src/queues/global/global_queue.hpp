@@ -60,7 +60,7 @@ class GlobalQueue {
             // . . .
 };
 
-/* ---------------------------------- IMPLEMENTATION ---------------------------------- */
+/* ------------------------------------------------------------------------------------------ */
 
 template <task::Task TaskT>
 void GlobalQueue<TaskT>::push(TaskPtr task) noexcept {
@@ -92,8 +92,8 @@ void GlobalQueue<TaskT>::push_batch(Batch&& batch) noexcept {
 }
 
 template <task::Task TaskT>
-std::optional<typename GlobalQueue<TaskT>::Batch>
-GlobalQueue<TaskT>::try_pop_batch(size_t max_count) noexcept {
+auto GlobalQueue<TaskT>::try_pop_batch(size_t max_count) noexcept
+    -> std::optional<typename GlobalQueue<TaskT>::Batch> {
     if (max_count == 0) {
         return std::nullopt;
     }

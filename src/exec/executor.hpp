@@ -51,7 +51,7 @@ class WsExecutor {
     void spawn_workers();
 };
 
-/* ---------------------------------- IMPLEMENTATION ---------------------------------- */
+/* -------------------------------------------------------------------- */
 
 template <task::Task TaskType, config::ExecutionConfig Config>
 WsExecutor<TaskType, Config>::WsExecutor(size_t workers_count)
@@ -84,9 +84,7 @@ void WsExecutor<TaskType, Config>::setup_victims() {
 template <task::Task TaskType, config::ExecutionConfig Config>
 void WsExecutor<TaskType, Config>::spawn_workers() {
     for (size_t i = 0; i < num_workers_; ++i) {
-        threads_.emplace_back([this, i]() {
-            workers_[i]->run();
-        });
+        threads_.emplace_back([this, i]() { workers_[i]->run(); });
     }
     started_.store(true);
 }
