@@ -3,6 +3,7 @@
 #include "fwd.hpp"
 #include "loot.hpp"
 #include "shared_state.hpp"
+#include "tasks/concept.hpp"
 
 namespace wr::queues {
 
@@ -63,7 +64,7 @@ auto StealHandle<TaskType, Capacity>::steal() noexcept -> Loot<TaskType> {
     return Loot<TaskType>::Success(task);
 }
 
-template <typename TaskType, size_t Capacity>
+template <task::Task TaskType, size_t Capacity>
 bool StealHandle<TaskType, Capacity>::empty() const noexcept {
     ///
     return state_->top_.load(std::memory_order_relaxed) >= state_->bottom_.load(std::memory_order_relaxed);
