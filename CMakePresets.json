@@ -17,7 +17,7 @@
       "name": "dev-twist",
       "displayName": "[WR_WITH_TWIST] : Twist + GTest",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build-twist",
+      "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
         "CMAKE_C_COMPILER": "clang",
         "CMAKE_CXX_COMPILER": "clang++",
@@ -31,9 +31,7 @@
       "name": "dev-asan",
       "displayName": "[WR_WITH_ASAN] : ASAN + GTest",
       "inherits": "dev",
-      "binaryDir": "${sourceDir}/build-asan",
       "cacheVariables": {
-        "CMAKE_CXX_STANDARD": "20",
         "WR_ENABLE_ASAN": "ON"
       }
     },
@@ -41,9 +39,7 @@
       "name": "dev-tsan",
       "displayName": "[WR_WITH_TSAN] : TSAN + GTest",
       "inherits": "dev",
-      "binaryDir": "${sourceDir}/build-tsan",
       "cacheVariables": {
-        "CMAKE_CXX_STANDARD": "20",
         "WR_ENABLE_TSAN": "ON"
       }
     }
