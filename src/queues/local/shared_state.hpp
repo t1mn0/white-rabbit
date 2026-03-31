@@ -10,12 +10,13 @@
 namespace wr::queues {
 
 /**
- * @brief SharedState : The core data structure shared between Owner and Thieves.
+ * @brief SharedState : The core data structure shared between owner and thieves.
  * It provides ergonomic access to shared RingBuffer
  * and handles HOW to access data without any coordination logic.
  *
- * We divide our shared resources by aligning them to different cache-lines in order to prevent
- * false-sharing.
+ * We divide our shared resources by aligning them to different cache-lines
+ * in order to prevent false-sharing.
+ *
  * => Stealers modifying top_ don't invalidate owner's cache-line
  * => Owner modifying bottom_ doesn't invalidate stealer's cache-line
  *
@@ -91,8 +92,7 @@ class SharedState {
      * @brief Load task from buffer by given index.
      */
     [[nodiscard]]
-    auto load_task(uint64_t idx, std::memory_order mo = std::memory_order_seq_cst) const noexcept
-        -> ValueType {
+    ValueType load_task(uint64_t idx, std::memory_order mo = std::memory_order_seq_cst) const noexcept {
         ///
         return tasks_.load(idx, mo);
         ///

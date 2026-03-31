@@ -7,7 +7,8 @@
 struct TestTask : IntrusiveListNode {
     int value;
 
-    explicit TestTask(int v) : value(v) {}
+    explicit TestTask(int v)
+        : value(v) {}
 
     void run() noexcept { /* do nothing */ }
 };
@@ -16,8 +17,6 @@ class GlobalQueueTest : public ::testing::Test {
   protected:
     wr::queues::GlobalQueue<TestTask> queue;
 };
-
-// -------------------- Tests --------------------
 
 TEST_F(GlobalQueueTest, FIFO) {
     TestTask t1(1), t2(2);
