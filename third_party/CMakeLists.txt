@@ -7,20 +7,17 @@ FetchContent_Declare(
     GIT_REPOSITORY https://github.com/niko256/ntrusive.git
     GIT_TAG master
 )
+
+# Fetch and make available
 FetchContent_MakeAvailable(ntrusive)
 
-FetchContent_MakeAvailable(
-  ntrusive
-)
-
-IF (ntrusive_POPULATED)
-  ADD_LIBRARY(third_party_ntrusive INTERFACE)
-
-  TARGET_INCLUDE_DIRECTORIES(third_party_ntrusive
-    INTERFACE
-      ${ntrusive_SOURCE_DIR}/include
-  )
+IF(NOT TARGET third_party_ntrusive)
+  add_library(third_party_ntrusive INTERFACE)
+  target_include_directories(third_party_ntrusive INTERFACE
+        ${ntrusive_SOURCE_DIR}/include
+    )
 ENDIF()
+
 
 # *---*---*---*---*---*---*
 

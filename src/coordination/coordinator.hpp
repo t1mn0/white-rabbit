@@ -10,13 +10,18 @@ namespace wr::coord {
  * 2. whether it needs to fall asleep immediately
  * 3. whether it is worth trying to retrieve tasks again (two-phase parking) */
 class Coordinator {
-  public:  // nested types:
-    using SearchPermit = Throttler::StealPermit;
+  private:
+    /* *---*---*---*---*---*---*---*---*---*---*---* */
 
-  private:  // data members:
     Throttler semaphore_;
     std::atomic<bool> shutdown_requested_ = false;
     std::atomic<bool> work_maybe_available_ = false;
+
+    /* *---*---*---*---*---*---*---*---*---*---*---* */
+
+  public:  // nested types:
+    using SearchPermit = Throttler::StealPermit;
+
 
   public:  // member functions:
     explicit Coordinator(size_t total_workers)

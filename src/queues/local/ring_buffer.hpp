@@ -72,12 +72,18 @@ class RingBuffer {
   public:  // nested types:
     using ValueType = TaskType*;
 
-  public:  // static data member:
+  public:
+    /* *---*---*---*---*---*---*---*---*---*---*---*---*---* */
+
     static constexpr size_t kCapacity = Capacity;
     static constexpr size_t kMask = Capacity - 1;
 
+    /* *---*---*---*---*---*---*---*---*---*---*---*---*---* */
+
   private:  // data members:
     std::array<std::atomic<ValueType>, Capacity> slots_{};
+
+    /* *---*---*---*---*---*---*---*---*---*---*---*---*---* */
 
   public:  // member functions:
     RingBuffer() = default;

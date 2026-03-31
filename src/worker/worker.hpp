@@ -18,7 +18,9 @@ class WsExecutor;
 
 template <task::Task TaskT, config::ExecutionConfig Config = config::DefaultConfig>
 class Worker {
-  public:  // nested types:
+  public:
+    /* *---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---* */
+
     static constexpr size_t kCapacity = Config::kLocalQueueCapacity;
     static constexpr size_t kMaxLifoStreak = Config::kMaxLifoStreak;
     static constexpr size_t kFairnessPeriod = Config::kFairnessPeriod;
@@ -27,7 +29,9 @@ class Worker {
     using LocalQueue = queues::WorkStealingQueue<TaskT, kCapacity>;
     using StealHandle = queues::StealHandle<TaskT, kCapacity>;
 
-  private:  // data members:
+  private:
+    /* *---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---* */
+
     /* Ownership relationship: Executor owns Workers.
      * Worker needs reference to the host to access global queue and coordinator */
     WsExecutor<TaskT, Config>& host_;
@@ -52,6 +56,8 @@ class Worker {
 
     std::atomic<bool> stop_flag_ = false;
 
+    /* *---*---*---*---*---*---*---*---*---*---*---*---*---*---*---* */
+
   public:  // member-functions:
     Worker(WsExecutor<TaskT, Config>& host, size_t worker_index);
 
@@ -73,12 +79,12 @@ class Worker {
     [[nodiscard]] TaskPtr try_pop_global() noexcept;
 };
 
-/* ---------------------------------- WHOAMI(worker) ---------------------------------- */
+/* *---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---* */
 
 template <task::Task T, config::ExecutionConfig C>
 thread_local Worker<T, C>* current_worker = nullptr;
 
-/* ---------------------------------- IMPLEMENTATION ---------------------------------- */
+/* *---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---* */
 
 template <task::Task TaskT, config::ExecutionConfig Config>
 Worker<TaskT, Config>::Worker(WsExecutor<TaskT, Config>& host, size_t index)

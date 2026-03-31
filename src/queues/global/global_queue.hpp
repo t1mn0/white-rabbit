@@ -15,15 +15,23 @@ namespace wr::queues {
 // >> MP-MC
 template <task::Task TaskT>
 class GlobalQueue {
-  public:  // nested types:
+  public:
+    /* *---*---*---*---*---*---* */
+
     using TaskPtr = TaskT*;
     using Batch = IntrusiveList<TaskT>;
 
-  private:  // data members:
+  private:
+    /* *---*---*---*---*---*---* */
+
     IntrusiveList<TaskT> buffer_;
 
-    // Point of contention:
-    mutable std::mutex mutex_;  // `mutable` since it is used in the constant method `.empty()`
+    /* Point of contention:
+     * @note mutable since it is used in the constant method .empty()
+     */
+    mutable std::mutex mutex_;
+
+    /* *---*---*---*---*---*---* */
 
   public:  // member functions:
     GlobalQueue() = default;
@@ -33,16 +41,12 @@ class GlobalQueue {
     GlobalQueue(GlobalQueue&&) = delete;                  // non-movable;
     GlobalQueue& operator=(GlobalQueue&&) = delete;       // non-moveassignable;
 
-    // -------------------- Producer API --------------------
-
     // Pushes a single task to the back of the queue
     void push(TaskPtr task) noexcept;
 
     // Docks a batch of tasks to GlobalQueue.
     // O(1) complexity thanks to IntrusiveList::splice
     void push_batch(Batch&& batch) noexcept;
-
-    // -------------------- Consumer API --------------------
 
     // Tries to extract one task. Returns std::nullopt if empty
     auto try_pop() noexcept -> std::optional<TaskPtr>;
@@ -60,7 +64,7 @@ class GlobalQueue {
             // . . .
 };
 
-/* ------------------------------------------------------------------------------------------ */
+/* *---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*--- */
 
 template <task::Task TaskT>
 void GlobalQueue<TaskT>::push(TaskPtr task) noexcept {
@@ -69,7 +73,7 @@ void GlobalQueue<TaskT>::push(TaskPtr task) noexcept {
 }
 
 template <task::Task TaskT>
-auto GlobalQueue<TaskT>::try_pop() noexcept -> std::optional<typename GlobalQueue<TaskT>::TaskPtr> {
+auto GlobalQueue<TaskT>::try_pop() noexcept -> std::optional<TaskPtr> {
     std::lock_guard lock(mutex_);
 
     if (buffer_.empty()) {
@@ -92,8 +96,7 @@ void GlobalQueue<TaskT>::push_batch(Batch&& batch) noexcept {
 }
 
 template <task::Task TaskT>
-auto GlobalQueue<TaskT>::try_pop_batch(size_t max_count) noexcept
-    -> std::optional<typename GlobalQueue<TaskT>::Batch> {
+auto GlobalQueue<TaskT>::try_pop_batch(size_t max_count) noexcept -> std::optional<Batch> {
     if (max_count == 0) {
         return std::nullopt;
     }

@@ -16,9 +16,13 @@ enum class State : uint8_t {
 
 template <task::Task TaskType>
 class Loot {
-  private:  // data members:
+  private:
+    /* *---*---*---*---*---*---* */
+
     State state_{State::Empty};
     TaskType* reward_{nullptr};
+
+    /* *---*---*---*---*---*---* */
 
   private:  // member functions:
     Loot(State s, TaskType* task) noexcept

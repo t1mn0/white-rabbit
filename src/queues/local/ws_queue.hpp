@@ -18,14 +18,18 @@ namespace wr::queues {
 template <task::Task TaskT, size_t Capacity>
     requires utils::constants::check::IsPowerOfTwo<Capacity>
 class WorkStealingQueue {
-  public:  // nested types:
+  public:
     using TaskPtr = TaskT*;
     using Batch = IntrusiveList<TaskT>;
 
-  private:  // data members:
+  private:
+    /* *---*---*---*---*---*---*---*---*---* */
+
     SharedState<TaskT, Capacity> state_;
 
-  public:  // friendship declaration:
+    /* *---*---*---*---*---*---*---*---*---* */
+
+  public:
     friend class StealHandle<TaskT, Capacity>;
 
   public:  // member functions:
@@ -37,14 +41,11 @@ class WorkStealingQueue {
     WorkStealingQueue& operator=(const WorkStealingQueue&) = delete;  // non-copyassignable
     WorkStealingQueue& operator=(WorkStealingQueue&&) = delete;       // non-moveassignable
 
-    /*  -------------------- Producer API -------------------- */
-
     /*
      * @brief Push task at the bottom, returns False if queue is full.
      */
     auto try_push(TaskPtr item) noexcept -> bool;
 
-    /*  -------------------- Consumer API -------------------- */
     /*
      * @brief Try pop task from the bottom, returns nullopt if empty.
      */
@@ -63,7 +64,7 @@ class WorkStealingQueue {
     auto create_stealer() noexcept -> StealHandle<TaskT, Capacity>;
 };
 
-/* ---------------------------------- IMPLEMENTATION ---------------------------------- */
+/* *---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*--- */
 
 template <task::Task TaskT, size_t Capacity>
     requires utils::constants::check::IsPowerOfTwo<Capacity>

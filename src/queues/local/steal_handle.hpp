@@ -16,9 +16,16 @@ namespace wr::queues {
 
 template <task::Task TaskType, size_t Capacity>
 class StealHandle {
-  private:  // data members:
-    /* We're holding ptr tthe other worker's shared state. It's like ticket or pass for the stealing */
+  private:
+    /* *---*---*---*---*---*---*---*---*---* */
+
+    /*
+     *  We're holding ptr tthe other worker's shared state.
+     * It's like ticket or pass for the stealing
+     */
     SharedState<TaskType, Capacity>* state_;
+
+    /* *---*---*---*---*---*---*---*---*---* */
 
   public:  // friendship declaration:
     friend class WorkStealingQueue<TaskType, Capacity>;
@@ -41,6 +48,8 @@ class StealHandle {
     StealHandle& operator=(const StealHandle&) = default;
     StealHandle& operator=(StealHandle&&) = default;
 };
+
+/* *---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*--- */
 
 template <task::Task TaskType, size_t Capacity>
 auto StealHandle<TaskType, Capacity>::steal() noexcept -> Loot<TaskType> {

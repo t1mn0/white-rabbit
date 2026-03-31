@@ -34,7 +34,9 @@ class SharedState {
   public:  // nested types:
     using ValueType = typename RingBuffer<TaskType, Capacity>::ValueType;
 
-  public:  // data members:
+  private:
+    /* *---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---* */
+
     /* Storage for task pointers. */
     alignas(utils::constants::CACHE_LINE_SIZE) RingBuffer<TaskType, Capacity> tasks_;
 
@@ -43,6 +45,8 @@ class SharedState {
 
     /* Next free slot index [global]. Modify by owner only. */
     alignas(utils::constants::CACHE_LINE_SIZE) std::atomic<uint64_t> bottom_ = 0;
+
+    /* *---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---* */
 
   public:  // member functions:
     SharedState() = default;

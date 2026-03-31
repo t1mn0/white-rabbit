@@ -6,14 +6,20 @@
 
 namespace wr::coord {
 
-/* An action for the worker what to do depending on the current number of thieves, which is
- * determined by the Coordinator */
+/* *---*---*---*---*---*---*---*---*---*---*---* */
+
+/* An action for the worker what to do
+ * depending on the current number of thieves,
+ *  which is determined by the Coordinator
+ */
 enum class Action : uint8_t {
     Steal,    /* have semaphore's Permit */
     Park,     /* command to park that worker */
     Retry,    /* two-phase parking */
     Terminate /* Gracefull shutdown for all workers */
 };
+
+/* *---*---*---*---*---*---*---*---*---*---*---* */
 
 /*
  * @brief CoordDirective is a component that encapsulates the result of a request to the
@@ -25,9 +31,13 @@ class Directive {
   public:  // nested types:
     using Permit = Throttler::StealPermit;
 
-  private:  // data members:
+  private:
+    /* *---*---*---*---*---*---*---* */
+
     Action action_;
     std::optional<Permit> permit_;
+
+    /* *---*---*---*---*---*---*---* */
 
   public:
     explicit Directive(Action action, std::optional<Permit> permit = std::nullopt)

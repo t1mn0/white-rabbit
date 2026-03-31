@@ -2,7 +2,7 @@
 
 #include <cstddef>
 
-/* ------------------------------------------------------------------- */
+/* *---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*--- */
 
 /* If any of these functions or constants are required in other pseudo-modules in the future, then
  * `utils`-dir will be moved a few folders higher and make it common; */
@@ -25,7 +25,7 @@ inline constexpr std::size_t CACHE_LINE_SIZE = (sizeof(std::size_t) == 8) ? 64 :
 
 #endif
 
-/* ------------------------------------------------------------------- */
+/* *---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*--- */
 
 /**
  * @section POWER OF TWO REQUIREMENT
