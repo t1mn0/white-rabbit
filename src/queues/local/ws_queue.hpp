@@ -117,10 +117,11 @@ auto WorkStealingQueue<TaskT, Capacity>::try_pop() noexcept -> std::optional<Tas
     /* => top <= bottom */
     auto task = state_.load_task(bt);
 
-    /* TODO : [refactoring : separate race() function ] */
     if (top < bt) {
         return task;
     }
+
+    /* TODO : [refactoring] : separate race() function */
 
     /* => otherwise, top == bottom
      * => race with stealers for the last element

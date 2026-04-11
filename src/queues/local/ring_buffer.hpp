@@ -13,7 +13,7 @@ namespace wr::queues {
 /**
  * @brief Fixed-size circular buffer for task pointers.
  *
- * @section PHILOSOPHY
+ * @section Philosophy
  *
  * ??? Why circular buffer ???
  *
@@ -23,25 +23,25 @@ namespace wr::queues {
  *
  *  >> Since we want to model/achieve the deque behavior and support work-stealing,
  *      this 'desired' data structure should have an ability to act with LIFO behavior for
- * worker and with FIFO behavior for stealers.
+ *      worker and with FIFO behavior for stealers.
  *
  *  >> Has quite predictable memory usage.
  *
  *  => Circular buffer is a perfect variant.
- *  It has O(1) complexity on push/pop operations.
- *  It has bounded capacity.
- *  It has zero allocation in hot path and reuses the same memory.
- *  And it is lock-free friendly.
+ *
+ *  >> It has O(1) complexity on push/pop operations.
+ *  >> It has bounded capacity.
+ *  >> It has zero allocation in hot path and reuses the same memory.
+ *      => it's lock-free friendly.
  *
  *
- * @section INDEXING
+ * @section Indexing
  *  We use two index concepts : [global] and [local].
  *
  *  >> Global index represents logical position in infinite stream :
  *  ... | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | ...
  *
- *  Top and Bottom are global indeces and NEVER decrease : they grow monotonically from 0 to
- * infty
+ *  Top and Bottom are global indices and NEVER decrease : they grow monotonically from 0 to infty.
  *
  *  => Current deque size := [Bottom - Top]
  *
@@ -58,14 +58,15 @@ namespace wr::queues {
  *    |---------------|
  *          CAPACITY
  *
- *  @section MAPPING / SLICING
+ *
+ *  @section Mapping / Slicing
  *
  *  >> That's actually simple : [Local] = [Global] % [Capacity]
- *  But since capacity := 2^N => It reduces to : [Global] & [mask], where mask := [capacity -
- * 1]
+ *  But since capacity := 2^N => It reduces to : [Global] & [mask], where mask := [capacity - 1]
  *
- * @tparam Capacity must be a power of two.
+ * @note Capacity must be a power of two.
  */
+
 template <task::Task TaskType, size_t Capacity>
     requires utils::constants::check::IsPowerOfTwo<Capacity>
 class RingBuffer {

@@ -42,9 +42,13 @@ class WsExecutor {
     void stop();
 
     // getters (for worker):
-    queues::GlobalQueue<TaskT>& global_queue() noexcept { return global_queue_; }
+    queues::GlobalQueue<TaskT>& global_queue() noexcept {
+        return global_queue_;
+    }
 
-    coord::Coordinator& coordinator() noexcept { return coordinator_; }
+    coord::Coordinator& coordinator() noexcept {
+        return coordinator_;
+    }
 
   private:  // member functions:
     void setup_victims();
@@ -55,7 +59,8 @@ class WsExecutor {
 
 template <task::Task TaskType, config::ExecutionConfig Config>
 WsExecutor<TaskType, Config>::WsExecutor(size_t workers_count)
-    : num_workers_(workers_count), coordinator_(workers_count) {
+    : num_workers_(workers_count),
+      coordinator_(workers_count) {
     for (size_t i = 0; i < num_workers_; ++i) {
         workers_.push_back(std::make_unique<WorkerType>(*this, i));
     }

@@ -17,7 +17,7 @@
       "name": "dev-twist",
       "displayName": "[WR_WITH_TWIST] : Twist + GTest",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build",
+      "binaryDir": "${sourceDir}/build-twist",
       "cacheVariables": {
         "CMAKE_C_COMPILER": "clang",
         "CMAKE_CXX_COMPILER": "clang++",

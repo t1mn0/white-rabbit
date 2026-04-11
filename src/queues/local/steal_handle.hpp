@@ -10,9 +10,9 @@ namespace wr::queues {
 /**
  * @brief StealHandle is an interface for stealers.
  *
- * @section LIFETIME
+ * @section Lifetime
  *
- *  >> StealHandle must not outlive a local queue
+ * >> StealHandle must not outlive a local queue
  */
 
 template <task::Task TaskType, size_t Capacity>

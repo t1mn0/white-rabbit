@@ -7,6 +7,8 @@
 #include "tasks/concept.hpp"
 #include "utils/constants.hpp"
 
+using wr::utils::constants::CACHE_LINE_SIZE;
+
 namespace wr::queues {
 
 /**
@@ -21,7 +23,7 @@ namespace wr::queues {
  * => Owner modifying bottom_ doesn't invalidate stealer's cache-line
  *
  *
- * @section INVARIANTS
+ * @section Invariants
  *
  * >> (top <= bottom)
  * >> (bottom - top <= capacity)
@@ -39,13 +41,13 @@ class SharedState {
     /* *---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---* */
 
     /* Storage for task pointers. */
-    alignas(utils::constants::CACHE_LINE_SIZE) RingBuffer<TaskType, Capacity> tasks_;
+    alignas(CACHE_LINE_SIZE) RingBuffer<TaskType, Capacity> tasks_;
 
     /* First valid element index [global]. Modify by stealers. */
-    alignas(utils::constants::CACHE_LINE_SIZE) std::atomic<uint64_t> top_ = 0;
+    alignas(CACHE_LINE_SIZE) std::atomic<uint64_t> top_{0};
 
     /* Next free slot index [global]. Modify by owner only. */
-    alignas(utils::constants::CACHE_LINE_SIZE) std::atomic<uint64_t> bottom_ = 0;
+    alignas(CACHE_LINE_SIZE) std::atomic<uint64_t> bottom_{0};
 
     /* *---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---* */
 
@@ -62,7 +64,7 @@ class SharedState {
      * @brief Load bottom index.
      */
     [[nodiscard]]
-    uint64_t load_bottom(std::memory_order mo = std::memory_order_seq_cst) const noexcept {
+    uint64_t load_bottom_idx(std::memory_order mo = std::memory_order_seq_cst) const noexcept {
         ///
         return bottom_.load(mo);
         ///
@@ -72,7 +74,7 @@ class SharedState {
      * @brief Load top index.
      */
     [[nodiscard]]
-    uint64_t load_top(std::memory_order mo = std::memory_order_seq_cst) const noexcept {
+    uint64_t load_top_idx(std::memory_order mo = std::memory_order_seq_cst) const noexcept {
         ///
         return top_.load(mo);
         ///
@@ -82,7 +84,7 @@ class SharedState {
      * @brief Store bottom index.
      * @param idx New bottom value.
      */
-    void store_bottom(uint64_t idx, std::memory_order mo = std::memory_order_seq_cst) noexcept {
+    void store_bottom_idx(uint64_t idx, std::memory_order mo = std::memory_order_seq_cst) noexcept {
         ///
         bottom_.store(idx, mo);
         ///
@@ -134,6 +136,10 @@ class SharedState {
         std::memory_order mo = std::memory_order_seq_cst
     ) noexcept {
         ///
+        if (count > bottom_.load()) {
+            return false;
+        }
+
         return top_.compare_exchange_strong(expected, expected + count, mo);
         ///
     }
