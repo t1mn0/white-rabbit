@@ -218,7 +218,7 @@ auto Worker<TaskT, Config>::try_steal_any() noexcept -> TaskPtr {
 
     for (size_t i = 0; i < victims_.size(); ++i) {
         size_t target = (start + i) % victims_.size();
-        auto loot = victims_[target].steal();
+        auto loot = victims_[target].steal_task();
 
         if (loot.success()) {
             return std::move(loot).unwrap();

@@ -4,6 +4,7 @@
 #include "loot.hpp"
 #include "shared_state.hpp"
 #include "tasks/concept.hpp"
+#include <atomic>
 
 namespace wr::queues {
 
@@ -21,7 +22,7 @@ class StealHandle {
     /* *---*---*---*---*---*---*---*---*---* */
 
     /*
-     *  We're holding ptr tthe other worker's shared state.
+     * We're holding ptr tthe other worker's shared state.
      * It's like ticket or pass for the stealing
      */
     SharedState<TaskType, Capacity>* state_;
@@ -36,7 +37,7 @@ class StealHandle {
         : state_(state) {}
 
     [[nodiscard]]
-    auto steal() noexcept -> Loot<TaskType>;
+    auto steal_task() noexcept -> Loot<TaskType>;
 
     [[nodiscard]]
     Loot<TaskType> steal_batch_and_pop(WorkStealingQueue<TaskType, Capacity>& dest) noexcept;
@@ -50,17 +51,21 @@ class StealHandle {
     StealHandle& operator=(StealHandle&&) = default;
 };
 
-/* *---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*--- */
+/* *---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---* */
 
+/**
+ * TODO : figure out about mmry orders here...
+ * [to prove in terms of partial orders]
+ */
 template <task::Task TaskType, size_t Capacity>
-auto StealHandle<TaskType, Capacity>::steal() noexcept -> Loot<TaskType> {
-    uint64_t top = state_->top_.load(std::memory_order_acquire /* ??? */);
+auto StealHandle<TaskType, Capacity>::steal_task() noexcept -> Loot<TaskType> {
+    uint64_t top = state_->load_top_idx(std::memory_order_seq_cst /* ??? */);
 
     std::atomic_thread_fence(std::memory_order_seq_cst /* ??? */);
 
-    uint64_t bottom = state_->bottom_.load(std::memory_order_acquire /* ??? */);
+    uint64_t btm = state_->load_bottom_idx(std::memory_order_seq_cst /* ??? */);
 
-    if (top >= bottom) {
+    if (top >= btm) {
         return Loot<TaskType>::Empty();
     }
 
@@ -76,7 +81,7 @@ auto StealHandle<TaskType, Capacity>::steal() noexcept -> Loot<TaskType> {
 template <task::Task TaskType, size_t Capacity>
 bool StealHandle<TaskType, Capacity>::empty() const noexcept {
     ///
-    return state_->top_.load(std::memory_order_relaxed) >= state_->bottom_.load(std::memory_order_relaxed);
+    return state_->load_top_idx() >= state_->load_bottom_idx();
     ///
 }
 };  // namespace wr::queues
