@@ -15,22 +15,22 @@ namespace wr::queues {
 // >> Bounded
 // >> Lock-free
 // >> SP-MC
-template <task::Task TaskT, size_t Capacity>
+template <task::Task TaskType, size_t Capacity>
     requires utils::constants::check::IsPowerOfTwo<Capacity>
 class WorkStealingQueue {
   public:
-    using TaskPtr = TaskT*;
-    using Batch = IntrusiveList<TaskT>;
+    using TaskPtr = TaskType*;
+    using Batch = IntrusiveList<TaskType>;
 
   private:
     /* *---*---*---*---*---*---*---*---*---* */
 
-    SharedState<TaskT, Capacity> state_;
+    SharedState<TaskType, Capacity> state_;
 
     /* *---*---*---*---*---*---*---*---*---* */
 
   public:
-    friend class StealHandle<TaskT, Capacity>;
+    friend class StealHandle<TaskType, Capacity>;
 
   public:  // member functions:
     WorkStealingQueue() = default;
@@ -53,30 +53,33 @@ class WorkStealingQueue {
 
 
     /*
-     * @brief Offload half of all tasks from the local queue to the global one if the local queue turns out to
-     * be full when attempting a push operation.
+     * @brief Offload half of all tasks from the local queue to the global one if
+     *        the local queue turns out to be full when attempting a push operation.
      *
      * @return List of offloaded tasks.
      */
     auto offload_half() noexcept -> std::optional<Batch>;
 
     [[nodiscard]]
-    auto create_stealer() noexcept -> StealHandle<TaskT, Capacity>;
+    auto create_stealer() noexcept -> StealHandle<TaskType, Capacity>;
+
+    [[nodiscard]]
+    auto inner_state() const noexcept -> const SharedState<TaskType, Capacity>&;
 };
 
 /* *---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*---*--- */
 
-template <task::Task TaskT, size_t Capacity>
+template <task::Task TaskType, size_t Capacity>
     requires utils::constants::check::IsPowerOfTwo<Capacity>
-auto WorkStealingQueue<TaskT, Capacity>::try_push(TaskPtr task) noexcept -> bool {
+auto WorkStealingQueue<TaskType, Capacity>::try_push(TaskPtr task) noexcept -> bool {
     /*
      * since stealers are never touch the bottom of the buffer
      * => only worker (producer) works with it on a separate cache-line
      * => relaxed mo
      */
-    auto bt = state_.load_bottom(std::memory_order::relaxed);
+    auto bt = state_.load_bottom_idx(std::memory_order::relaxed);
 
-    auto top = state_.load_top();
+    auto top = state_.load_top_idx();
 
     /* capacity cheeeck.. */
     if (bt - top >= Capacity) {
@@ -84,41 +87,41 @@ auto WorkStealingQueue<TaskT, Capacity>::try_push(TaskPtr task) noexcept -> bool
     }
     state_.store_task(bt, task);
 
-    /* maybe fence right here..? */
+    /* maybe fence right here..?
+     * TODO : figure out what mo to use right here!!?
+     */
     std::atomic_thread_fence(std::memory_order::seq_cst /* ??? */);
 
-    state_.store_bottom(++bt);
+    state_.store_bottom_idx(++bt);
 
     return true;
 }
 
-template <task::Task TaskT, size_t Capacity>
+template <task::Task TaskType, size_t Capacity>
     requires utils::constants::check::IsPowerOfTwo<Capacity>
-auto WorkStealingQueue<TaskT, Capacity>::try_pop() noexcept -> std::optional<TaskPtr> {
+auto WorkStealingQueue<TaskType, Capacity>::try_pop() noexcept -> std::optional<TaskPtr> {
     /* relaxedd mo here for the same reason [worker is the only one that has access tthe bottom]  */
-    auto bt = state_.load_bottom(std::memory_order::relaxed) - 1;
+    auto bt = state_.load_bottom_idx(std::memory_order::relaxed);
+    auto top = state_.load_top_idx();
 
-    state_.store_bottom(bt);
+    /* queue is empty... */
+    if (top == bt) {
+        return std::nullopt;
+    }
+
+    bt -= 1;
+    state_.store_bottom_idx(bt);
 
     /* TODO : [to clarify and proof these guarantees in terms of partial orders]
      * TODO : [test with Twist simulations this case]
      */
     std::atomic_thread_fence(std::memory_order::seq_cst);
 
-    auto top = state_.load_top();
-
-    /* queue is empty... */
-    if (top >= bt) {
-        /* cancellation... */
-        state_.store_bottom(++bt);
-        return std::nullopt;
-    }
-
-    /* => top <= bottom */
-    auto task = state_.load_task(bt);
+    top = state_.load_top_idx();
 
     if (top < bt) {
-        return task;
+        /* => top <= bottom */
+        return state_.load_task(bt);
     }
 
     /* TODO : [refactoring] : separate race() function */
@@ -128,31 +131,32 @@ auto WorkStealingQueue<TaskT, Capacity>::try_pop() noexcept -> std::optional<Tas
      */
     if (state_.try_increment_top(top)) {
         /* we won the race */
-        state_.store_bottom(++bt);
-        return task;
+        state_.store_bottom_idx(bt + 1);
+        return state_.load_task(bt);
 
     } else {
         /* stealer won... */
-        state_.store_bottom(++bt);
+        /* cancellation... */
+        state_.store_bottom_idx(bt + 1);
         return std::nullopt;
     }
 }
 
-template <task::Task TaskT, size_t Capacity>
+template <task::Task TaskType, size_t Capacity>
     requires utils::constants::check::IsPowerOfTwo<Capacity>
-auto WorkStealingQueue<TaskT, Capacity>::create_stealer() noexcept -> StealHandle<TaskT, Capacity> {
+auto WorkStealingQueue<TaskType, Capacity>::create_stealer() noexcept -> StealHandle<TaskType, Capacity> {
     ///
-    return StealHandle<TaskT, Capacity>(&state_);
+    return StealHandle<TaskType, Capacity>(&state_);
     ///
 }
 
-template <task::Task TaskT, size_t Capacity>
+template <task::Task TaskType, size_t Capacity>
     requires utils::constants::check::IsPowerOfTwo<Capacity>
-auto WorkStealingQueue<TaskT, Capacity>::offload_half() noexcept -> std::optional<Batch> {
-    IntrusiveList<TaskT> batch;
+auto WorkStealingQueue<TaskType, Capacity>::offload_half() noexcept -> std::optional<Batch> {
+    IntrusiveList<TaskType> batch;
 
-    auto bt = state_.load_bottom();
-    auto top = state_.load_top();
+    auto bt = state_.load_bottom_idx();
+    auto top = state_.load_top_idx();
 
     auto size = bt - top;
 
@@ -173,6 +177,15 @@ auto WorkStealingQueue<TaskT, Capacity>::offload_half() noexcept -> std::optiona
     }
 
     return batch;
+}
+
+template <task::Task TaskType, size_t Capacity>
+    requires utils::constants::check::IsPowerOfTwo<Capacity>
+auto WorkStealingQueue<TaskType, Capacity>::inner_state() const noexcept
+    -> const SharedState<TaskType, Capacity>& {
+    ///
+    return state_;
+    ///
 }
 
 }  // namespace wr::queues
